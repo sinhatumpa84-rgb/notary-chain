@@ -138,7 +138,7 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md p-8 rounded-2xl bg-white border border-[#E8E2DA] shadow-card-lg">
+    <div className="w-full max-w-md p-5 sm:p-8 rounded-2xl bg-white border border-[#E8E2DA] shadow-card-lg">
       
       {/* Brand Logo & Header */}
       <div className="text-center mb-8">
