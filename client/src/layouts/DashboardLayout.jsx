@@ -33,7 +33,7 @@ const DashboardLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF8F4] text-[#2E2A26] flex selection:bg-[#2D6A4F]/20">
+    <div className="min-h-screen bg-[#FAF8F4] dark:bg-[#0F172A] text-[#2E2A26] flex selection:bg-[#2D6A4F]/20 dashboard-bg-grid">
 
       {/* ── Mobile Sidebar Backdrop ── */}
       <AnimatePresence>

@@ -214,6 +214,59 @@ body {
 .badge-info    { background: #E0F2FE; color: #0369A1; }
 .badge-neutral { background: #F3F4F6; color: #6B7280; }
 
+/* ── Dashboard Background Architectural Grid ──────────────── */
+/*
+ * Two-layer precision grid applied to the dashboard root.
+ * Both pseudo-elements use z-index: -1 so they always sit
+ * behind every child element (sidebar, topbar, cards, modals,
+ * toasts, chat button, 3D decorative elements).
+ * pointer-events: none ensures zero interaction interference.
+ */
+.dashboard-bg-grid {
+  position: relative;
+  isolation: isolate;
+}
+
+.dashboard-bg-grid::before,
+.dashboard-bg-grid::after {
+  content: '';
+  position: fixed;   /* fixed so the grid doesn't scroll with content */
+  inset: 0;
+  pointer-events: none;
+  background-repeat: repeat;
+  z-index: -1;
+}
+
+/* Layer 1 — Fine primary grid (28px × 28px) */
+.dashboard-bg-grid::before {
+  background-image:
+    linear-gradient(to right,  rgba(46, 42, 38, 0.030) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(46, 42, 38, 0.030) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Layer 2 — Larger accent grid (140px × 140px) */
+.dashboard-bg-grid::after {
+  background-image:
+    linear-gradient(to right,  rgba(46, 42, 38, 0.062) 1.5px, transparent 1.5px),
+    linear-gradient(to bottom, rgba(46, 42, 38, 0.062) 1.5px, transparent 1.5px);
+  background-size: 140px 140px;
+  background-position: -0.5px -0.5px;
+}
+
+/* ── Dark Mode: Muted Warm Gold Grid ──────────────────────── */
+.dark .dashboard-bg-grid::before {
+  background-image:
+    linear-gradient(to right,  rgba(212, 175, 55, 0.040) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(212, 175, 55, 0.040) 1px, transparent 1px);
+}
+
+.dark .dashboard-bg-grid::after {
+  background-image:
+    linear-gradient(to right,  rgba(212, 175, 55, 0.085) 1.5px, transparent 1.5px),
+    linear-gradient(to bottom, rgba(212, 175, 55, 0.085) 1.5px, transparent 1.5px);
+}
+
 /* ── Auth Background Architectural Grid ───────────────────── */
 .auth-bg-grid {
   position: relative;
