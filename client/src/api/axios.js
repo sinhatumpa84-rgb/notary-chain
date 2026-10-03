@@ -1,9 +1,23 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
-    ? 'https://server-lovat-gamma-13.vercel.app/api' 
-    : '/api');
+const getApiBaseUrl = () => {
+  if (typeof window === 'undefined') return '/api';
+  const isLocal = window.location.hostname === 'localhost' || 
+                  window.location.hostname === '127.0.0.1' || 
+                  window.location.hostname.endsWith('.localhost');
+
+  let envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) {
+    if (window.location.protocol === 'https:' && envUrl.startsWith('http://') && !isLocal) {
+      envUrl = envUrl.replace(/^http:\/\//, 'https://');
+    }
+    return envUrl;
+  }
+
+  return isLocal ? '/api' : 'https://server-lovat-gamma-13.vercel.app/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
