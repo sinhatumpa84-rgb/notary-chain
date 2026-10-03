@@ -239,7 +239,7 @@ export default function FloatingChatbot({ documentId = null, documentContext = '
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setOpen(true)}
-            className="fixed bottom-6 right-6 z-50 w-13 h-13 rounded-2xl bg-[#2D6A4F] text-white shadow-card-lg flex items-center justify-center border border-[#1B4532]"
+            className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 w-12 h-12 sm:w-13 sm:h-13 rounded-2xl bg-[#2D6A4F] text-white shadow-card-lg flex items-center justify-center border border-[#1B4532]"
             aria-label="Open AI Assistant"
           >
             <MessageSquare className="w-5 h-5" />
@@ -255,7 +255,7 @@ export default function FloatingChatbot({ documentId = null, documentContext = '
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ type: 'spring', bounce: 0.15, duration: 0.3 }}
-            className="fixed bottom-6 right-6 z-50 w-[360px] sm:w-[420px] rounded-2xl bg-white border border-[#E8E2DA] shadow-card-lg overflow-hidden flex flex-col max-h-[85vh]"
+            className="fixed bottom-20 sm:bottom-6 right-3 sm:right-6 left-3 sm:left-auto z-50 w-auto sm:w-[420px] max-w-[calc(100vw-24px)] rounded-2xl bg-white border border-[#E8E2DA] shadow-card-lg overflow-hidden flex flex-col max-h-[80vh] sm:max-h-[85vh]"
           >
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 bg-[#F0FAF5] border-b border-[#E8E2DA]">
