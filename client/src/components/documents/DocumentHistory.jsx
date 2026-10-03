@@ -242,7 +242,7 @@ const DocumentHistory = () => {
           const score = typeof ai?.trust_score === 'number' ? ai.trust_score : (typeof selectedItem.trustScore === 'number' ? selectedItem.trustScore : 95);
 
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#2E2A26]/40 backdrop-blur-xs">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-[#2E2A26]/40 backdrop-blur-xs">
               <motion.div
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -250,13 +250,13 @@ const DocumentHistory = () => {
                 className="w-full max-w-3xl bg-white border border-[#E8E2DA] rounded-2xl shadow-card-lg overflow-hidden flex flex-col max-h-[92vh]"
               >
                 {/* Modal Header */}
-                <div className="p-5 border-b border-[#E8E2DA] flex justify-between items-center bg-[#F6F3EE] shrink-0">
+                <div className="p-3.5 sm:p-5 border-b border-[#E8E2DA] flex justify-between items-center bg-[#F6F3EE] shrink-0">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-[#2D6A4F] text-white flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-[#2D6A4F] text-white flex items-center justify-center shrink-0">
                       {isBundle ? <Layers className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
                     </div>
                     <div>
-                      <h3 className="font-display text-base font-bold text-[#2E2A26]">{selectedItem.title}</h3>
+                      <h3 className="font-display text-sm sm:text-base font-bold text-[#2E2A26]">{selectedItem.title}</h3>
                       <p className="text-[10px] text-[#7B746E]">
                         Cryptographic Verification Audit · Scanned {selectedItem.scannedAt}
                       </p>
@@ -271,7 +271,7 @@ const DocumentHistory = () => {
                 </div>
 
                 {/* Modal Body */}
-                <div className="p-6 overflow-y-auto space-y-5 flex-1">
+                <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5 flex-1">
                   {/* Meta Banner */}
                   <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-[#F0FAF5] border border-[#B3E4CC] rounded-xl text-xs">
                     <div>
@@ -298,9 +298,9 @@ const DocumentHistory = () => {
                     </div>
 
                     {selectedItem.hash && (
-                      <div className="w-full pt-2 mt-1 border-t border-[#B3E4CC]/50 text-[10px] font-mono text-[#52796F] flex items-center justify-between">
-                        <span>Canonical SHA-256 Hash:</span>
-                        <span className="text-[#2D6A4F] font-bold select-all">{selectedItem.hash}</span>
+                      <div className="w-full pt-2 mt-1 border-t border-[#B3E4CC]/50 text-[10px] font-mono text-[#52796F] flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <span className="shrink-0">Canonical SHA-256 Hash:</span>
+                        <span className="text-[#2D6A4F] font-bold select-all break-all">{selectedItem.hash}</span>
                       </div>
                     )}
                   </div>
