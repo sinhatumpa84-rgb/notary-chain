@@ -116,7 +116,7 @@ const SignupForm = () => {
   };
 
   return (
-    <div className="w-full max-w-lg p-8 rounded-2xl bg-white border border-[#E8E2DA] shadow-card relative overflow-hidden">
+    <div className="w-full max-w-lg p-5 sm:p-8 rounded-2xl bg-white border border-[#E8E2DA] shadow-card relative overflow-hidden">
       {/* Progress bar header */}
       <div className="absolute top-0 left-0 w-full h-1 bg-[#F6F3EE]">
         <motion.div
