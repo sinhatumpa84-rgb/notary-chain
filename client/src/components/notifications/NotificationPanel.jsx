@@ -43,23 +43,23 @@ const NotificationPanel = ({ isOpen, onClose }) => {
             className="fixed inset-y-0 right-0 z-50 w-full sm:w-[420px] bg-white border-l border-[#E9E4DD] shadow-2xl flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-[#E9E4DD]">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#F0FAF5] text-[#2D6A4F] flex items-center justify-center font-bold">
+            <div className="flex items-center justify-between p-3.5 sm:p-5 border-b border-[#E9E4DD]">
+              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-[#F0FAF5] text-[#2D6A4F] flex items-center justify-center font-bold shrink-0">
                   <BellRing className="w-4 h-4" />
                 </div>
-                <div>
-                  <h3 className="text-base font-bold text-[#2D2A27]">Notifications</h3>
-                  <p className="text-xs text-[#9B9490]">Live alerts & security events</p>
+                <div className="min-w-0">
+                  <h3 className="text-sm sm:text-base font-bold text-[#2D2A27] truncate">Notifications</h3>
+                  <p className="text-[10px] sm:text-xs text-[#9B9490] truncate">Live alerts & security events</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <button
                   onClick={markAllAsRead}
-                  className="text-xs font-semibold text-[#2D6A4F] hover:underline flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#F0FAF5] transition-colors"
+                  className="text-[11px] sm:text-xs font-semibold text-[#2D6A4F] hover:underline flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg hover:bg-[#F0FAF5] transition-colors"
                 >
-                  <Check className="w-3.5 h-3.5" /> Mark all read
+                  <Check className="w-3.5 h-3.5" /> <span className="hidden xs:inline">Mark all read</span><span className="xs:hidden">Mark all</span>
                 </button>
                 <button
                   onClick={onClose}

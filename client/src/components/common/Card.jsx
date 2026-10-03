@@ -6,7 +6,7 @@ const Card = ({
   className = '',
   hover = false,
   gradient = false,
-  padding = 'p-6',
+  padding = 'p-4 sm:p-6',
   onClick
 }) => {
   const Component = onClick || hover ? motion.div : 'div';
