@@ -63,7 +63,7 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="w-full max-w-md p-8 rounded-2xl bg-white border border-[#E8E2DA] shadow-card-lg">
+    <div className="w-full max-w-md p-5 sm:p-8 rounded-2xl bg-white border border-[#E8E2DA] shadow-card-lg">
       <div className="text-center mb-8">
         <div className="w-10 h-10 rounded-xl bg-[#2D6A4F] text-white flex items-center justify-center mx-auto mb-3 shadow-xs">
           <FileText className="w-5 h-5" />
