@@ -107,13 +107,13 @@ export default function Pricing() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F4] py-20 px-4 sm:px-6 lg:px-8 font-sans text-[#2E2A26]">
+    <div className="min-h-screen bg-[#FAF8F4] pt-24 pb-12 sm:pt-28 sm:pb-20 px-4 sm:px-6 lg:px-8 font-sans text-[#2E2A26]">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
           <motion.h1 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-bold tracking-tight mb-6"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4 sm:mb-6"
           >
             Simple, transparent pricing
           </motion.h1>
@@ -121,7 +121,7 @@ export default function Pricing() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-lg text-[#55504B] mb-10"
+            className="text-base sm:text-lg text-[#55504B] mb-8 sm:mb-10"
           >
             NotaryChain provides the digital trust infrastructure for the modern web. 
             Choose the plan that fits your scale.
@@ -152,7 +152,7 @@ export default function Pricing() {
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-16 sm:mb-24">
           {PRICING_DATA.map((plan, index) => {
             const Icon = plan.icon;
             const isCurrent = plan.key === currentPlanKey;
@@ -163,7 +163,7 @@ export default function Pricing() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * index }}
-                className={`relative flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ${plan.recommended ? 'ring-2 ring-[#2D6A4F] shadow-lg md:-translate-y-4' : 'ring-[#E8E2DA]'}`}
+                className={`relative flex flex-col rounded-2xl bg-white p-5 sm:p-8 shadow-sm ring-1 ${plan.recommended ? 'ring-2 ring-[#2D6A4F] shadow-lg md:-translate-y-4' : 'ring-[#E8E2DA]'}`}
               >
                 {plan.recommended && (
                   <div className="absolute -top-4 left-0 right-0 flex justify-center">
@@ -239,7 +239,7 @@ export default function Pricing() {
           </div>
           <div className="space-y-6">
             {FAQS.map((faq, index) => (
-              <div key={index} className="rounded-2xl bg-white p-6 ring-1 ring-[#E8E2DA] shadow-sm">
+              <div key={index} className="rounded-2xl bg-white p-4 sm:p-6 ring-1 ring-[#E8E2DA] shadow-sm">
                 <h3 className="text-base font-semibold leading-7 text-[#2E2A26] mb-2">{faq.question}</h3>
                 <p className="text-sm leading-6 text-[#55504B]">{faq.answer}</p>
               </div>
