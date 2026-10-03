@@ -199,12 +199,12 @@ const FaceScannerModal = ({ isOpen, onClose, mode = 'login', onSuccess }) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-md p-6 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden"
+          className="relative w-full max-w-md p-4 sm:p-6 bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
@@ -213,10 +213,10 @@ const FaceScannerModal = ({ isOpen, onClose, mode = 'login', onSuccess }) => {
                 <ShieldIcon size={20} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">
+                <h3 className="text-base sm:text-lg font-bold text-white">
                   {mode === 'register' ? 'Enroll Face ID' : 'Face ID Authentication'}
                 </h3>
-                <p className="text-xs text-slate-400">MongoDB 128D FaceNet Verification</p>
+                <p className="text-[11px] sm:text-xs text-slate-400">MongoDB 128D FaceNet Verification</p>
               </div>
             </div>
             <button
@@ -239,7 +239,7 @@ const FaceScannerModal = ({ isOpen, onClose, mode = 'login', onSuccess }) => {
 
             {/* Target Reticle */}
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-              <div className={`w-52 h-64 rounded-[50%] border-2 transition-all duration-300 ${
+              <div className={`w-44 sm:w-52 h-52 sm:h-64 rounded-[50%] border-2 transition-all duration-300 ${
                 authState === 'FACE_DETECTED'
                   ? 'border-emerald-400 shadow-[0_0_30px_rgba(52,211,153,0.6)]'
                   : authState === 'QUALITY_CHECK_FAILED'
@@ -253,7 +253,7 @@ const FaceScannerModal = ({ isOpen, onClose, mode = 'login', onSuccess }) => {
             </div>
 
             {/* Overlay Status Badge */}
-            <div className="absolute bottom-3 left-3 right-3 py-1.5 px-3 rounded-xl bg-slate-900/90 backdrop-blur-md border border-white/10 text-center text-xs font-semibold text-slate-200">
+            <div className="absolute bottom-2.5 sm:bottom-3 left-2.5 sm:left-3 right-2.5 sm:right-3 py-1.5 px-2.5 sm:px-3 rounded-xl bg-slate-900/90 backdrop-blur-md border border-white/10 text-center text-[11px] sm:text-xs font-semibold text-slate-200 truncate sm:whitespace-normal">
               {statusMsg}
             </div>
           </div>
@@ -278,11 +278,11 @@ const FaceScannerModal = ({ isOpen, onClose, mode = 'login', onSuccess }) => {
           )}
 
           {/* Action Buttons */}
-          <div className="mt-5 flex gap-3">
+          <div className="mt-4 sm:mt-5 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
             {authState === 'FAILED' ? (
               <button
                 onClick={handleRetry}
-                className="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 min-h-[44px]"
               >
                 <RefreshIcon size={18} /> Retry Face Scan
               </button>
@@ -290,14 +290,14 @@ const FaceScannerModal = ({ isOpen, onClose, mode = 'login', onSuccess }) => {
               <>
                 <button
                   onClick={onClose}
-                  className="flex-1 py-3 px-4 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-all text-sm font-medium"
+                  className="w-full sm:flex-1 py-3 px-4 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition-all text-sm font-medium order-2 sm:order-1 min-h-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleProcessScan}
                   disabled={authState !== 'FACE_DETECTED' || isVerifyingLockRef.current}
-                  className="flex-2 py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold text-sm shadow-lg shadow-indigo-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full sm:flex-2 py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold text-sm shadow-lg shadow-indigo-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2 order-1 sm:order-2 min-h-[44px]"
                 >
                   {authState === 'VERIFYING' ? (
                     <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/> Verifying Embedding...</>
