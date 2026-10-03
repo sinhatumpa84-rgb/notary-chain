@@ -5,9 +5,9 @@ export default function IPhoneFrame({ children, activeTab, onTabChange }) {
   const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <div className="flex flex-col items-center justify-center py-2 px-1">
+    <div className="flex flex-col items-center justify-center py-2 px-1 w-full max-w-full overflow-hidden">
       {/* Outer Phone Hardware Chassis */}
-      <div className="relative w-full max-w-[370px] h-[780px] bg-slate-950 rounded-[48px] p-3 shadow-[0_25px_60px_-15px_rgba(45,106,79,0.25)] border-4 border-slate-800 ring-1 ring-white/10 overflow-hidden flex flex-col transition-all">
+      <div className="relative w-full max-w-full xs:max-w-[370px] h-[720px] sm:h-[780px] bg-slate-950 rounded-[36px] sm:rounded-[48px] p-2 sm:p-3 shadow-[0_25px_60px_-15px_rgba(45,106,79,0.25)] border-2 sm:border-4 border-slate-800 ring-1 ring-white/10 overflow-hidden flex flex-col transition-all">
         
         {/* Dynamic Island / Notch */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-full z-50 flex items-center justify-between px-3 shadow-inner">
