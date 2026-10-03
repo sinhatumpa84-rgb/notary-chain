@@ -1,6 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 @import 'tailwindcss';
 
+/* ── Dark mode: use the .dark class on <html>, not prefers-color-scheme ── */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-display: 'Manrope', 'Inter', system-ui, sans-serif;
@@ -210,3 +213,51 @@ body {
 .badge-error   { background: #FEE2E2; color: #DC2626; }
 .badge-info    { background: #E0F2FE; color: #0369A1; }
 .badge-neutral { background: #F3F4F6; color: #6B7280; }
+
+/* ── Auth Background Architectural Grid ───────────────────── */
+.auth-bg-grid {
+  position: relative;
+  isolation: isolate;
+}
+
+.auth-bg-grid::before,
+.auth-bg-grid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-repeat: repeat;
+}
+
+/* Layer 1: Primary Fine Architectural Grid (24px x 24px) */
+.auth-bg-grid::before {
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.035) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Layer 2: Secondary Larger Architectural Grid (120px x 120px, major offset lines) */
+.auth-bg-grid::after {
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.07) 1.5px, transparent 1.5px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.07) 1.5px, transparent 1.5px);
+  background-size: 120px 120px;
+  background-position: -0.5px -0.5px;
+}
+
+/* ── Dark Mode Grid (Restrained Muted Golden Tone) ────────── */
+.dark .auth-bg-grid::before {
+  background-image:
+    linear-gradient(to right, rgba(212, 175, 55, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(212, 175, 55, 0.045) 1px, transparent 1px);
+}
+
+.dark .auth-bg-grid::after {
+  background-image:
+    linear-gradient(to right, rgba(212, 175, 55, 0.09) 1.5px, transparent 1.5px),
+    linear-gradient(to bottom, rgba(212, 175, 55, 0.09) 1.5px, transparent 1.5px);
+}
+

@@ -70,7 +70,7 @@ const AuthLayout = () => {
       </div>
 
       {/* ── Right Form Panel ──────────────────────────── */}
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 lg:p-12 min-w-0">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 lg:p-12 min-w-0 relative auth-bg-grid">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
@@ -78,14 +78,14 @@ const AuthLayout = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25 }}
-            className="w-full max-w-md min-w-0"
+            className="w-full max-w-md min-w-0 relative z-10"
           >
             {/* Mobile logo */}
             <div className="flex items-center gap-2 mb-8 lg:hidden">
               <div className="w-8 h-8 rounded-lg bg-[#2D6A4F] flex items-center justify-center">
                 <FileText className="w-4 h-4 text-white" />
               </div>
-              <span className="font-display font-700 text-lg text-[#2E2A26]">NotaryChain</span>
+              <span className="font-display font-700 text-lg text-[#2E2A26] dark:text-white">NotaryChain</span>
             </div>
 
             <Outlet />
