@@ -70,7 +70,7 @@ const AuthLayout = () => {
       </div>
 
       {/* ── Right Form Panel ──────────────────────────── */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 lg:p-12 min-w-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
@@ -78,7 +78,7 @@ const AuthLayout = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25 }}
-            className="w-full max-w-md"
+            className="w-full max-w-md min-w-0"
           >
             {/* Mobile logo */}
             <div className="flex items-center gap-2 mb-8 lg:hidden">
