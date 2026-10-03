@@ -30,18 +30,18 @@ const NotaryDashboard = () => {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="p-4 rounded-xl border border-[#E9E4DD] bg-[#FAF8F4] flex justify-between items-center hover:border-[#2D6A4F] transition-colors group"
+                className="p-3.5 sm:p-4 rounded-xl border border-[#E9E4DD] bg-[#FAF8F4] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 hover:border-[#2D6A4F] transition-colors group"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
                   <div className="w-9 h-9 rounded-lg bg-[#F0FAF5] text-[#2D6A4F] border border-[#C3DDD0] flex items-center justify-center shrink-0">
                     <PenTool className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-[#2D2A27]">Power of Attorney - Doc #{i + 800}</h4>
-                    <p className="text-[11px] text-[#9B9490]">Requested by: Legal Partners LLC</p>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-xs font-bold text-[#2D2A27] truncate">Power of Attorney - Doc #{i + 800}</h4>
+                    <p className="text-[11px] text-[#9B9490] truncate">Requested by: Legal Partners LLC</p>
                   </div>
                 </div>
-                <button className="px-3 py-1.5 bg-[#2D6A4F] hover:bg-[#245741] text-white rounded-lg text-xs font-semibold transition-colors shadow-xs">
+                <button className="w-full sm:w-auto px-3 py-1.5 bg-[#2D6A4F] hover:bg-[#245741] text-white rounded-lg text-xs font-semibold transition-colors shadow-xs shrink-0 cursor-pointer">
                   Sign Now
                 </button>
               </div>
