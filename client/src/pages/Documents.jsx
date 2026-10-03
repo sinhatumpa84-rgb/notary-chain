@@ -10,16 +10,16 @@ const Documents = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-bold text-[#2D2A27] tracking-tight">Cryptographic Document Vault</h1>
-          <p className="text-[13px] text-[#9B9490] mt-0.5">
+          <h1 className="text-xl sm:text-[22px] font-bold text-[#2D2A27] tracking-tight">Cryptographic Document Vault</h1>
+          <p className="text-[12px] sm:text-[13px] text-[#9B9490] mt-0.5">
             Manage, anchor, and inspect SHA-256 signatures stored on Polygon Amoy
           </p>
         </div>
         <button
           onClick={() => setUploadOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#2D6A4F] text-white text-[12px] font-semibold hover:bg-[#245741] transition-colors shadow-xs cursor-pointer"
+          className="flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 rounded-lg bg-[#2D6A4F] text-white text-[13px] sm:text-[12px] font-semibold hover:bg-[#245741] transition-colors shadow-xs cursor-pointer w-full sm:w-auto min-h-[44px] sm:min-h-0"
         >
           <Plus className="w-4 h-4" />
           Upload Document
