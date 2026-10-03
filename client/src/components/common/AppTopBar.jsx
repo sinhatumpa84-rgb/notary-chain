@@ -23,23 +23,24 @@ const AppTopBar = ({ onMobileMenuToggle }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center h-[57px] bg-white border-b border-[#E9E4DD] px-4 sm:px-6 gap-4 shrink-0 transition-colors">
+    <header className="sticky top-0 z-30 flex items-center h-[57px] bg-white border-b border-[#E9E4DD] px-2.5 sm:px-6 gap-1.5 sm:gap-4 shrink-0 transition-colors">
       {/* Mobile hamburger */}
       <button
         onClick={onMobileMenuToggle}
-        className="lg:hidden p-1.5 -ml-1 rounded-lg text-[#7B746E] hover:bg-[#F6F3EE] hover:text-[#2D2A27] transition-colors"
+        className="lg:hidden p-2 -ml-1 rounded-lg text-[#7B746E] hover:bg-[#F6F3EE] hover:text-[#2D2A27] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
+        aria-label="Open Navigation Menu"
       >
         <Menu className="w-5 h-5" />
       </button>
 
       {/* Search */}
-      <div className="flex-1 max-w-sm">
+      <div className="flex-1 max-w-[130px] xs:max-w-xs sm:max-w-sm min-w-0">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#AAA49F]" />
+          <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#AAA49F]" />
           <input
             type="text"
-            placeholder="Search documents, transactions…"
-            className="w-full pl-9 pr-4 py-2 text-[13px] bg-[#FAF8F4] border border-[#E9E4DD] rounded-lg text-[#2D2A27] placeholder:text-[#AAA49F] focus:outline-none focus:border-[#2D6A4F] transition-all"
+            placeholder="Search documents…"
+            className="w-full pl-8 sm:pl-9 pr-2.5 sm:pr-4 py-1.5 sm:py-2 text-[11px] sm:text-[13px] bg-[#FAF8F4] border border-[#E9E4DD] rounded-lg text-[#2D2A27] placeholder:text-[#AAA49F] focus:outline-none focus:border-[#2D6A4F] transition-all"
           />
         </div>
       </div>
