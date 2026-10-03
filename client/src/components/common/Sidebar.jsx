@@ -4,13 +4,14 @@ import { motion } from 'framer-motion';
 import {
   LayoutDashboard, CreditCard, ShieldCheck, FileText,
   History, BarChart3, Wallet, Settings, ChevronLeft,
-  ChevronRight, X, LogOut, Activity, Sparkles
+  ChevronRight, X, LogOut, Activity, Sparkles, Tag
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import UsageTracker from './UsageTracker';
 
 const NAV_ITEMS = [
   { label: 'Dashboard',     path: '/dashboard',         icon: LayoutDashboard, group: 'main' },
+  { label: 'AI Fair Price', path: '/fair-price',        icon: Tag,             group: 'main', badge: 'AI' },
   { label: 'Neobank',       path: '/neobank',            icon: CreditCard,      group: 'main' },
   { label: 'Verification',  path: '/verifications',      icon: ShieldCheck,     group: 'main' },
   { label: 'Documents',     path: '/documents',          icon: FileText,        group: 'main' },
@@ -105,6 +106,7 @@ const Sidebar = ({ collapsed, onToggle, isMobileDrawer = false }) => {
                   <NavLink
                     key={item.label + item.path}
                     to={item.path}
+                    onClick={isMobileDrawer ? onToggle : undefined}
                     title={collapsed && !isMobileDrawer ? item.label : undefined}
                     className={({ isActive }) =>
                       `relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-150 group
@@ -131,7 +133,14 @@ const Sidebar = ({ collapsed, onToggle, isMobileDrawer = false }) => {
                           strokeWidth={isActive ? 2.5 : 2}
                         />
                         {(!collapsed || isMobileDrawer) && (
-                          <span className="truncate">{item.label}</span>
+                          <>
+                            <span className="truncate">{item.label}</span>
+                            {item.badge && (
+                              <span className="ml-auto text-[10px] font-bold px-1.5 py-0.2 rounded bg-[#F0FAF5] text-[#2D6A4F] border border-[#B3E4CC]">
+                                {item.badge}
+                              </span>
+                            )}
+                          </>
                         )}
                         {/* Tooltip for collapsed state */}
                         {collapsed && !isMobileDrawer && (
