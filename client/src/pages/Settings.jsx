@@ -43,7 +43,7 @@ const Settings = () => {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="p-6 bg-white border border-[#E9E4DD] rounded-xl shadow-xs space-y-4"
+        className="p-4 sm:p-6 bg-white border border-[#E9E4DD] rounded-xl shadow-xs space-y-4"
       >
         <div className="flex items-center gap-2.5 pb-4 border-b border-[#E9E4DD]">
           <div className="w-8 h-8 rounded-lg bg-[#F0FAF5] text-[#2D6A4F] flex items-center justify-center font-bold">
@@ -67,7 +67,7 @@ const Settings = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[12px] font-semibold text-[#2D2A27] mb-1">New Password</label>
               <input
@@ -93,7 +93,7 @@ const Settings = () => {
           <button
             type="submit"
             disabled={updating}
-            className="px-4 py-2 bg-[#2D6A4F] hover:bg-[#245741] text-white text-xs font-semibold rounded-lg transition-colors shadow-xs"
+            className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-[#2D6A4F] hover:bg-[#245741] text-white text-xs font-semibold rounded-lg transition-colors shadow-xs min-h-[44px] sm:min-h-0"
           >
             {updating ? 'Updating Password…' : 'Save Password Changes'}
           </button>
@@ -105,7 +105,7 @@ const Settings = () => {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
-        className="p-6 bg-white border border-[#E9E4DD] rounded-xl shadow-xs space-y-4"
+        className="p-4 sm:p-6 bg-white border border-[#E9E4DD] rounded-xl shadow-xs space-y-4"
       >
         <div className="flex items-center gap-2.5 pb-4 border-b border-[#E9E4DD]">
           <div className="w-8 h-8 rounded-lg bg-[#F0FAF5] text-[#2D6A4F] flex items-center justify-center font-bold">
@@ -123,7 +123,7 @@ const Settings = () => {
             { key: 'docs', label: 'Document Status Alerts', desc: 'Instant alerts when documents are notarized or rejected' },
             { key: 'fraud', label: 'Critical Fraud & Tamper Alerts', desc: 'Immediate notification on signature anomaly (Required)' },
           ].map((n) => (
-            <div key={n.key} className="flex items-center justify-between p-3.5 bg-[#FAF8F4] border border-[#E9E4DD] rounded-xl">
+            <div key={n.key} className="flex items-center justify-between p-3 sm:p-3.5 bg-[#FAF8F4] border border-[#E9E4DD] rounded-xl gap-2">
               <div>
                 <h4 className="text-xs font-bold text-[#2D2A27]">{n.label}</h4>
                 <p className="text-[11px] text-[#9B9490]">{n.desc}</p>
@@ -131,7 +131,7 @@ const Settings = () => {
               <button
                 type="button"
                 onClick={() => toggleNotification(n.key)}
-                className={`w-11 h-6 rounded-full p-0.5 transition-colors relative ${
+                className={`w-11 h-6 rounded-full p-0.5 transition-colors relative shrink-0 ${
                   notifications[n.key] ? 'bg-[#2D6A4F]' : 'bg-[#D4CECA]'
                 } ${n.key === 'fraud' ? 'opacity-75 cursor-not-allowed' : ''}`}
               >
@@ -151,7 +151,7 @@ const Settings = () => {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="p-6 bg-white border border-red-200 rounded-xl shadow-xs space-y-3"
+        className="p-4 sm:p-6 bg-white border border-red-200 rounded-xl shadow-xs space-y-3"
       >
         <div className="flex items-center gap-2 text-red-600">
           <ShieldAlert className="w-4 h-4" />
@@ -163,7 +163,7 @@ const Settings = () => {
         <button
           type="button"
           onClick={() => toast.error('Account deletion requires admin authorization.')}
-          className="px-4 py-2 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-lg transition-colors"
+          className="w-full sm:w-auto px-4 py-2.5 sm:py-2 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-lg transition-colors min-h-[44px] sm:min-h-0"
         >
           Deactivate Enterprise Workspace
         </button>

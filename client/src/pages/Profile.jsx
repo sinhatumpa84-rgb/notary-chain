@@ -141,7 +141,7 @@ const Profile = () => {
 
         {/* LEFT — Avatar Card */}
         <div className="col-span-1">
-          <div className="p-6 sm:p-8 bg-white border border-[#E9E4DD] rounded-3xl flex flex-col items-center text-center shadow-card">
+          <div className="p-4 sm:p-8 bg-white border border-[#E9E4DD] rounded-3xl flex flex-col items-center text-center shadow-card">
             {/* Hidden File Input for Avatar Upload */}
             <input
               type="file"
@@ -223,8 +223,8 @@ const Profile = () => {
 
         {/* RIGHT — Personal Info & Security */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="p-6 sm:p-8 bg-white border border-[#E9E4DD] rounded-3xl shadow-card">
-            <div className="flex items-center justify-between mb-8">
+          <div className="p-4 sm:p-8 bg-white border border-[#E9E4DD] rounded-3xl shadow-card">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8">
               <div>
                 <h3 className="text-xl font-bold text-[#2E2A26] font-display">Personal Information</h3>
                 <p className="text-[#7B746E] text-sm mt-1">Update your name, phone, and contact details</p>
@@ -232,7 +232,7 @@ const Profile = () => {
               {!editing && (
                 <button
                   onClick={() => setEditing(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#F0FAF5] text-[#2D6A4F] border border-[#B3E4CC] rounded-xl text-sm font-semibold hover:bg-[#D9F2E6] transition-all shadow-xs"
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-[#F0FAF5] text-[#2D6A4F] border border-[#B3E4CC] rounded-xl text-sm font-semibold hover:bg-[#D9F2E6] transition-all shadow-xs self-start sm:self-auto min-h-[44px] sm:min-h-0"
                 >
                   <HiOutlinePencil size={16}/> Edit Profile
                 </button>
@@ -375,7 +375,7 @@ const Profile = () => {
           </div>
 
           {/* Security & Face ID Card */}
-          <div className="p-6 bg-white border border-[#E9E4DD] rounded-3xl shadow-card space-y-6">
+          <div className="p-4 sm:p-6 bg-white border border-[#E9E4DD] rounded-3xl shadow-card space-y-6">
             <h3 className="text-base font-bold text-[#2E2A26] flex items-center gap-2 font-display">
               <HiOutlineShieldCheck size={18} className="text-[#2D6A4F]"/> MongoDB Biometrics & Security
             </h3>
@@ -400,7 +400,7 @@ const Profile = () => {
               </div>
               <button
                 onClick={() => setFaceModalOpen(true)}
-                className="w-full sm:w-auto px-4 py-2 text-sm font-semibold text-white bg-[#2D6A4F] hover:bg-[#245741] rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                className="w-full sm:w-auto px-4 py-2 text-sm font-semibold text-white bg-[#2D6A4F] hover:bg-[#245741] rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 whitespace-nowrap min-h-[44px] sm:min-h-0"
               >
                 <HiOutlineCamera size={16} /> Register Face ID
               </button>
@@ -408,7 +408,7 @@ const Profile = () => {
           </div>
 
           {/* Log Out Section Card */}
-          <div className="p-6 bg-white border border-rose-200 rounded-3xl shadow-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="p-4 sm:p-6 bg-white border border-rose-200 rounded-3xl shadow-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <h4 className="text-base font-bold text-[#2E2A26] flex items-center gap-2 font-display">
                 <HiOutlineArrowRightOnRectangle className="text-rose-600" size={20}/> Session & Account
