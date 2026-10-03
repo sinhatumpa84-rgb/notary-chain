@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '../components/common/Sidebar';
 import AppTopBar from '../components/common/AppTopBar';
 import MobileBottomNav from '../components/common/MobileBottomNav';
-import { ToastProvider } from '../components/common/Toast';
 import FloatingChatbot from '../components/common/FloatingChatbot';
 import { useAuth } from '../hooks/useAuth';
 
@@ -35,7 +34,6 @@ const DashboardLayout = () => {
 
   return (
     <div className="min-h-screen bg-[#FAF8F4] text-[#2E2A26] flex selection:bg-[#2D6A4F]/20">
-      <ToastProvider />
 
       {/* ── Mobile Sidebar Backdrop ── */}
       <AnimatePresence>

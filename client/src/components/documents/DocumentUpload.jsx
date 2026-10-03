@@ -105,7 +105,7 @@ const DocumentUpload = ({ isOpen, onClose, onSuccess }) => {
         toast.success('Document uploaded & AI analysis complete!', { id: toastId });
       } else {
         toast.success('Document uploaded!', { id: toastId });
-        if (data.aiError) toast.error(`AI: ${data.aiError}`, { duration: 5000 });
+        if (data.aiError) toast.error(`AI: ${data.aiError}`);
       }
 
       if (typeof onSuccess === 'function') onSuccess(data.document);

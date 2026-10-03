@@ -330,13 +330,13 @@ const IdentityVerification = () => {
       } else if (msg.includes('No registered face') || msg.includes('register your face first') || msg.includes('No face biometric profile') || msg.includes('not found in MongoDB')) {
         popupMsg = 'No face profile registered yet. Positioning face to enroll face key...';
         setMode('register');
-        toast.info('No face profile found. Switching to Register Face Key mode.', { duration: 4000 });
+        toast.info('No face profile found. Switching to Register Face Key mode.');
       } else if (msg.toLowerCase().includes('face not match') || msg.includes('95%')) {
         popupMsg = 'Face not match.';
       }
       setAuthState('FAILED');
       setVerificationError(popupMsg);
-      toast.error(popupMsg, { duration: 5000 });
+      toast.error(popupMsg);
     } finally {
       isVerifyingLockRef.current = false;
       setEnrollmentProgress(0);
@@ -401,7 +401,7 @@ const IdentityVerification = () => {
           ? 'I think you should not have any account, so first create an account.'
           : msg);
       setVerificationError(popupMsg);
-      toast.error(popupMsg, { duration: 5000 });
+      toast.error(popupMsg);
     } finally {
       setPasswordVerifying(false);
     }

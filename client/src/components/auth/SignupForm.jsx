@@ -31,7 +31,7 @@ const SignupForm = () => {
     if (step === 1) {
       if (isEmailRegisteredLocally(formData.email)) {
         setExistingEmailError('An account with this email already exists. Please log in instead.');
-        toast.error('An account with this email already exists. Please log in instead.', { duration: 5000 });
+        toast.error('An account with this email already exists. Please log in instead.');
         return;
       }
       setEmailCheckLoading(true);
@@ -41,7 +41,7 @@ const SignupForm = () => {
         const exists = checkRes?.data?.data?.exists ?? checkRes?.data?.exists ?? false;
         if (exists) {
           setExistingEmailError('An account with this email already exists. Please log in instead.');
-          toast.error('An account with this email already exists. Please log in instead.', { duration: 5000 });
+          toast.error('An account with this email already exists. Please log in instead.');
           return;
         }
       } catch (err) {
@@ -57,7 +57,7 @@ const SignupForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isEmailRegisteredLocally(formData.email)) {
-      toast.error('An account with this email already exists. Please log in instead.', { duration: 5000 });
+      toast.error('An account with this email already exists. Please log in instead.');
       return;
     }
     if (formData.password !== formData.confirm) return toast.error('Passwords do not match');
@@ -74,9 +74,9 @@ const SignupForm = () => {
     } catch (err) {
       const msg = err.message || 'Signup failed';
       if (msg.includes('already exists') || msg.includes('Already signed in') || msg.includes('email-already-in-use') || msg.includes('Please sign in') || msg.includes('Please log in')) {
-        toast.error('An account with this email already exists. Please log in instead.', { duration: 5000 });
+        toast.error('An account with this email already exists. Please log in instead.');
       } else {
-        toast.error(msg, { duration: 5000 });
+        toast.error(msg);
       }
     } finally {
       setLoading(false);
@@ -96,9 +96,9 @@ const SignupForm = () => {
     } catch (err) {
       const msg = err.message || 'Google sign-up failed.';
       if (msg.includes('already exists') || msg.includes('Already signed in') || msg.includes('email-already-in-use') || msg.includes('Please sign in') || msg.includes('Please log in')) {
-        toast.error('An account with this email already exists. Please log in instead.', { duration: 5000 });
+        toast.error('An account with this email already exists. Please log in instead.');
       } else {
-        toast.error(msg, { duration: 5000 });
+        toast.error(msg);
       }
     } finally {
       setGoogleLoading(false);

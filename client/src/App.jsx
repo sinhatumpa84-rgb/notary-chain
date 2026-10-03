@@ -4,8 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { PlanProvider } from './context/PlanContext';
-import { useAuth } from './hooks/useAuth';
-import { Toaster } from 'react-hot-toast';
+import { ToastProvider } from './components/common/Toast';
 
 // Layouts
 import AuthLayout from './layouts/AuthLayout';
@@ -143,27 +142,7 @@ function App() {
           </Routes>
 
           {/* Global Toast Notifications */}
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#FFFFFF',
-                color: '#2E2A26',
-                border: '1px solid #E8E2DA',
-                boxShadow: '0 4px 12px 0 rgba(46, 42, 38, 0.10)',
-                borderRadius: '14px',
-                fontSize: '13px',
-                fontWeight: '500',
-              },
-              success: {
-                iconTheme: { primary: '#2D6A4F', secondary: '#FFFFFF' },
-              },
-              error: {
-                iconTheme: { primary: '#DC2626', secondary: '#FFFFFF' },
-              },
-            }}
-          />
+          <ToastProvider />
         </NotificationProvider>
       </PlanProvider>
     </AuthProvider>

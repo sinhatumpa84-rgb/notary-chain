@@ -261,3 +261,26 @@ body {
     linear-gradient(to bottom, rgba(212, 175, 55, 0.09) 1.5px, transparent 1.5px);
 }
 
+/* ── Toast Smooth Enter/Exit Micro-Animations (200-300ms) ── */
+@keyframes toastEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastExit {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+}
+
