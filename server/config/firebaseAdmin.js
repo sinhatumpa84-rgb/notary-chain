@@ -6,7 +6,7 @@ const { getAuth } = require('firebase-admin/auth');
 // Guard against duplicate initialisation (e.g. nodemon hot-reload)
 if (!getApps().length) {
   initializeApp({
-    projectId: process.env.FIREBASE_PROJECT_ID || 'notarychain-95523',
+    projectId: process.env.FIREBASE_PROJECT_ID || 'signal-scout-483d5',
   });
 }
 

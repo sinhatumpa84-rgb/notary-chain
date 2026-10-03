@@ -1,10 +1,18 @@
 # Dependencies
 node_modules/
 
-# Environment
+# Environment & Secrets
 .env
+.env.*
 .env.local
+.env*.local
 .env.production
+*.env
+*.env.local
+*.pem
+*.key
+*serviceAccount*.json
+*firebase*.json
 
 # Build output
 dist/

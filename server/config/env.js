@@ -22,6 +22,7 @@ module.exports = {
   JWT_EXPIRE: env.JWT_EXPIRE || '7d',
   JWT_REFRESH_EXPIRE: env.JWT_REFRESH_EXPIRE || '30d',
   GROQ_API_KEY: env.GROQ_API_KEY || '',
+  XAI_API_KEY: env.XAI_API_KEY || '',
   SMTP: {
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,
@@ -38,6 +39,6 @@ module.exports = {
   POLYGON_AMOY_RPC_URL: env.POLYGON_AMOY_RPC_URL || 'https://polygon-amoy-bor-rpc.publicnode.com',
   BLOCKCHAIN_PRIVATE_KEY: env.BLOCKCHAIN_PRIVATE_KEY || '',
   CONTRACT_ADDRESS: env.CONTRACT_ADDRESS || '0x0000000000000000000000000000000000001010',
-  FIREBASE_PROJECT_ID: env.FIREBASE_PROJECT_ID || 'notarychain-95523',
+  FIREBASE_PROJECT_ID: env.FIREBASE_PROJECT_ID || 'signal-scout-483d5',
 };
 

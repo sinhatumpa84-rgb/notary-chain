@@ -1,7 +1,15 @@
 import { createContext, useState, useEffect, useCallback } from 'react';
 import axiosInstance from '../api/axios';
 import { auth, googleProvider, IS_CONFIGURED } from '../config/firebase';
-import { signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from 'firebase/auth';
+import {
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  onAuthStateChanged,
+  signOut,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword
+} from 'firebase/auth';
 
 export const AuthContext = createContext();
 
@@ -241,8 +249,24 @@ export const AuthProvider = ({ children }) => {
 
   const login = useCallback(async (email, password) => {
     try {
-      const res = await axiosInstance.post('/auth/login', { email, password });
-      const payload = extract(res);
+      let fbUser = null;
+      if (IS_CONFIGURED && auth && email && password) {
+        try {
+          const userCred = await signInWithEmailAndPassword(auth, email, password);
+          fbUser = userCred?.user;
+          console.log('[Firebase Auth] Signed in successfully with email:', fbUser?.email);
+        } catch (fbErr) {
+          console.log('[Firebase Auth] Email login notice:', fbErr.code);
+        }
+      }
+
+      let payload = null;
+      try {
+        const res = await axiosInstance.post('/auth/login', { email, password });
+        payload = extract(res);
+      } catch (backendErr) {
+        if (!fbUser) throw backendErr;
+      }
 
       const accessToken  = payload?.tokens?.accessToken;
       const refreshToken = payload?.tokens?.refreshToken;
@@ -256,13 +280,13 @@ export const AuthProvider = ({ children }) => {
       }
 
       const role = email?.startsWith('admin') ? 'admin' : email?.startsWith('notary') ? 'notary' : 'company';
-      const loggedInUser = userData || { ...DEMO_USER, email, role };
+      const loggedInUser = userData || { ...DEMO_USER, email, role, name: fbUser?.displayName || email.split('@')[0] };
       if (loggedInUser.role === 'bank') loggedInUser.role = 'company';
       setUser(loggedInUser);
       localStorage.setItem('user_session', JSON.stringify(loggedInUser));
       localStorage.removeItem('face_verified');
       setNeedsVerification(true);
-      return payload;
+      return payload || { user: loggedInUser };
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Login failed';
       throw new Error(errorMsg);
@@ -271,8 +295,24 @@ export const AuthProvider = ({ children }) => {
 
   const signup = useCallback(async (formData) => {
     try {
-      const res = await axiosInstance.post('/auth/signup', formData);
-      const payload = extract(res);
+      let fbUser = null;
+      if (IS_CONFIGURED && auth && formData.email && formData.password) {
+        try {
+          const userCred = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+          fbUser = userCred?.user;
+          console.log('[Firebase Auth] User created in Firebase:', fbUser?.email);
+        } catch (fbErr) {
+          console.log('[Firebase Auth] Email signup notice:', fbErr.code);
+        }
+      }
+
+      let payload = null;
+      try {
+        const res = await axiosInstance.post('/auth/signup', formData);
+        payload = extract(res);
+      } catch (backendErr) {
+        if (!fbUser) throw backendErr;
+      }
 
       const accessToken  = payload?.tokens?.accessToken;
       const refreshToken = payload?.tokens?.refreshToken;
@@ -294,7 +334,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user_session', JSON.stringify(newUser));
       localStorage.removeItem('face_verified');
       setNeedsVerification(true);
-      return payload;
+      return payload || { user: newUser };
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Signup failed';
       throw new Error(errorMsg);
