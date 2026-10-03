@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Building, ShieldCheck, FileCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
+import { isEmailRegisteredLocally } from '../../context/AuthContext';
 import Button from '../common/Button';
 import Input from '../common/Input';
 

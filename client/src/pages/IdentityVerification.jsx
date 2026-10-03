@@ -38,6 +38,8 @@ const IdentityVerification = () => {
   const canvasRef = useRef(null);
   const detectionTimerRef = useRef(null);
   const isVerifyingLockRef = useRef(false);
+  const streamRef = useRef(null);
+  const isStartingCameraRef = useRef(false);
 
   const [stream, setStream] = useState(null);
   const [modelsReady, setModelsReady] = useState(false);
@@ -127,48 +129,126 @@ const IdentityVerification = () => {
     return () => { isMounted = false; };
   }, []);
 
-  // Start Camera with explicit browser permission request
+  // Start Camera with explicit browser permission request and complete readiness handling
   const startCamera = useCallback(async () => {
+    if (isStartingCameraRef.current) return;
+
+    // If an active stream is already attached and playing, confirm ready state
+    if (streamRef.current && streamRef.current.active && videoRef.current && videoRef.current.srcObject) {
+      setAuthState('SEARCHING_FOR_FACE');
+      setStatusMessage('Position your face clearly inside the oval guide');
+      return;
+    }
+
+    isStartingCameraRef.current = true;
     setAuthState('CAMERA_STARTING');
     setStatusMessage('Requesting camera permission...');
     setVerificationError('');
     setIsLegacyMismatch(false);
 
     if (!navigator?.mediaDevices?.getUserMedia) {
+      isStartingCameraRef.current = false;
       setAuthState('FAILED');
-      const unsupportedMsg = 'Camera access is required for Face ID verification. Please allow camera permission in your browser settings and try again.';
+      const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      let unsupportedMsg = 'Camera access is required for Face ID verification. Please allow camera permission in your browser settings and try again.';
+      if (!isHttps && !isLocal) {
+        unsupportedMsg = 'Camera requires a secure context (HTTPS). Please access NotaryChain over HTTPS.';
+      }
       setVerificationError(unsupportedMsg);
       toast.error(unsupportedMsg);
       return;
     }
 
+    // Stop any existing tracks cleanly
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+
     try {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
+      // Query permissions status if supported to immediately acknowledge granted state
+      if (navigator.permissions && navigator.permissions.query) {
+        try {
+          const perm = await navigator.permissions.query({ name: 'camera' });
+          if (perm.state === 'granted') {
+            setStatusMessage('Camera permission granted. Accessing camera...');
+          }
+        } catch {}
       }
 
-      // Explicitly request camera permission via browser standard getUserMedia mechanism
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
-      });
-      setStream(mediaStream);
+      let mediaStream;
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+          audio: false
+        });
+      } catch (constraintErr) {
+        if (constraintErr.name === 'OverconstrainedError' || constraintErr.name === 'ConstraintNotSatisfiedError') {
+          console.warn('Falling back to standard video constraint:', constraintErr);
+          mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        } else {
+          throw constraintErr;
+        }
+      }
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play();
-          setAuthState('SEARCHING_FOR_FACE');
-          setStatusMessage('Position your face clearly inside the oval guide');
+      streamRef.current = mediaStream;
+      setStream(mediaStream);
+      setStatusMessage('Camera ready. Starting video stream...');
+
+      const video = videoRef.current;
+      if (video) {
+        video.srcObject = mediaStream;
+
+        // Explicitly trigger play on the muted video element
+        try {
+          await video.play();
+        } catch (playErr) {
+          console.warn('video.play() notification:', playErr);
+        }
+
+        const markReady = () => {
+          if (video && video.videoWidth > 0 && video.videoHeight > 0) {
+            setAuthState('SEARCHING_FOR_FACE');
+            setStatusMessage('Position your face clearly inside the oval guide');
+          }
         };
+
+        if (video.readyState >= 2 && video.videoWidth > 0) {
+          markReady();
+        } else {
+          video.addEventListener('loadedmetadata', markReady, { once: true });
+          video.addEventListener('loadeddata', markReady, { once: true });
+          video.addEventListener('canplay', markReady, { once: true });
+          video.addEventListener('playing', markReady, { once: true });
+          setTimeout(markReady, 250);
+          setTimeout(markReady, 600);
+        }
       }
     } catch (err) {
-      console.error('Camera permission error:', err);
+      console.error('Camera initialization failed:', err);
       setAuthState('FAILED');
-      const permErrorMsg = 'Camera access is required for Face ID verification. Please allow camera permission in your browser settings and try again.';
-      setVerificationError(permErrorMsg);
-      toast.error(permErrorMsg);
+      let errorMsg = 'Failed to access camera. Please check your device settings.';
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        errorMsg = 'Camera permission was denied. Please allow camera access in Chrome address bar (tune icon) and click Retry.';
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        errorMsg = 'No camera device found on your system. Please connect a webcam.';
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        errorMsg = 'Camera is currently in use by another application or browser tab.';
+      } else if (err.name === 'OverconstrainedError' || err.name === 'ConstraintNotSatisfiedError') {
+        errorMsg = 'Requested camera resolution is not supported by your camera.';
+      } else if (err.name === 'SecurityError') {
+        errorMsg = 'Camera access blocked due to security context. Please ensure you are on localhost or HTTPS.';
+      } else if (err.name === 'AbortError') {
+        errorMsg = 'Camera initialization was aborted. Please click Retry Scan.';
+      }
+      setVerificationError(errorMsg);
+      setStatusMessage(errorMsg);
+      toast.error(errorMsg);
+    } finally {
+      isStartingCameraRef.current = false;
     }
-  }, [stream]);
+  }, []);
 
   // Stop Camera
   const stopCamera = useCallback(() => {
@@ -176,20 +256,26 @@ const IdentityVerification = () => {
       clearInterval(detectionTimerRef.current);
       detectionTimerRef.current = null;
     }
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      setStream(null);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     }
-  }, [stream]);
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setStream(null);
+  }, []);
 
   useEffect(() => {
-    if (verificationMethod === 'face' && modelsReady) {
+    if (verificationMethod === 'face') {
       startCamera();
-    } else if (verificationMethod !== 'face') {
+    } else {
       stopCamera();
     }
-    return () => stopCamera();
-  }, [verificationMethod, modelsReady]);
+    return () => {
+      stopCamera();
+    };
+  }, [verificationMethod, startCamera, stopCamera]);
 
   // Throttled Detection Loop (Runs every 200ms)
   useEffect(() => {
