@@ -36,6 +36,8 @@ import BlockchainHealth from './pages/BlockchainHealth';
 import IdentityVerification from './pages/IdentityVerification';
 import PublicVerify from './pages/PublicVerify';
 import Pricing from './pages/Pricing';
+import PriceComparison from './pages/PriceComparison';
+import FairPrice from './pages/FairPrice';
 
 /**
  * ProtectedRoute — Redirects to /login if user is not authenticated, or /verify-identity if face 2FA pending.
@@ -97,6 +99,7 @@ function App() {
                 <Route path="/" element={<Landing />} />
                 <Route path="/verify-hash" element={<PublicVerify />} />
                 <Route path="/pricing" element={<Pricing />} />
+                <Route path="/price-comparison" element={<PriceComparison />} />
               </Route>
 
             {/* Standalone Neobank Route (Protected) */}
@@ -117,6 +120,7 @@ function App() {
             {/* 3. PROTECTED DASHBOARD ROUTES (Product Dashboard) */}
             <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/fair-price" element={<FairPrice />} />
               <Route path="/documents" element={<Documents />} />
               <Route path="/documents/:id" element={<DocumentDetail />} />
               <Route path="/profile" element={<Profile />} />
