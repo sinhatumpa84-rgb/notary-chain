@@ -24,7 +24,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* ── Metric Cards ── */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
         {[
           { title: 'Total Users', value: '1,248', icon: Users, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
           { title: 'Total Documents', value: '14,293', icon: FileText, color: 'text-[#2D6A4F]', bg: 'bg-[#F0FAF5] border-[#C3DDD0]' },
