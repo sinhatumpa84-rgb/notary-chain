@@ -143,31 +143,31 @@ const DocumentUpload = ({ isOpen, onClose, onSuccess }) => {
     : (typeof ai?.trustScore === 'number' ? ai.trustScore : null);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#2E2A26]/40 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-[#2E2A26]/40 backdrop-blur-xs">
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.96 }}
-        className="w-full max-w-3xl bg-white border border-[#E8E2DA] rounded-2xl shadow-card-lg overflow-hidden flex flex-col max-h-[94vh]"
+        className="w-full max-w-3xl bg-white border border-[#E8E2DA] rounded-2xl shadow-card-lg overflow-hidden flex flex-col max-h-[96vh] sm:max-h-[94vh]"
       >
         {/* Header */}
-        <div className="p-5 border-b border-[#E8E2DA] flex justify-between items-center bg-[#F6F3EE] shrink-0">
+        <div className="p-3.5 sm:p-5 border-b border-[#E8E2DA] flex justify-between items-center bg-[#F6F3EE] shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#2D6A4F] text-white flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[#2D6A4F] text-white flex items-center justify-center shrink-0">
               {isBundle ? <Layers className="w-4 h-4" /> : <UploadCloud className="w-4 h-4" />}
             </div>
-            <div>
-              <h2 className="font-display text-base font-bold text-[#2E2A26]">
+            <div className="min-w-0">
+              <h2 className="font-display text-sm sm:text-base font-bold text-[#2E2A26] truncate">
                 {isBundle ? 'Document Bundle Analysis' : 'Upload Document'}
               </h2>
-              <p className="text-[10px] text-[#7B746E]">
+              <p className="text-[10px] text-[#7B746E] truncate">
                 {isBundle ? `Multi-Document Intelligence (${bundle.total_documents} detected)` : 'Cryptographic AI Document Analysis'}
               </p>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="p-1.5 text-[#7B746E] hover:text-[#2E2A26] hover:bg-[#E8E2DA]/50 rounded-lg transition-colors"
+            className="p-1.5 text-[#7B746E] hover:text-[#2E2A26] hover:bg-[#E8E2DA]/50 rounded-lg transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -184,12 +184,12 @@ const DocumentUpload = ({ isOpen, onClose, onSuccess }) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="p-6 space-y-5"
+                className="p-4 sm:p-6 space-y-4 sm:space-y-5"
               >
                 {/* Drop zone */}
                 <div
                   {...getRootProps()}
-                  className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+                  className={`border-2 border-dashed rounded-2xl p-5 sm:p-8 text-center cursor-pointer transition-all ${
                     isDragActive
                       ? 'border-[#2D6A4F] bg-[#F0FAF5]'
                       : 'border-[#E8E2DA] bg-[#FFFDF9] hover:border-[#2D6A4F] hover:bg-[#F0FAF5]/50'
