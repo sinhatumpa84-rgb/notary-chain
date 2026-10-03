@@ -20,7 +20,7 @@ import { loadFaceApiModels, analyzeWebcamFrame } from '../utils/faceApiLoader';
 
 const IdentityVerification = () => {
   const navigate = useNavigate();
-  const { updateUser, completeVerification } = useAuth();
+  const { user, updateUser, completeVerification } = useAuth();
 
   const [pendingUser, setPendingUser] = useState(null);
   const [tempToken, setTempToken] = useState('');
@@ -81,11 +81,29 @@ const IdentityVerification = () => {
       } catch (e) {}
     }
 
+    if (!parsedUser && user) {
+      parsedUser = user;
+      setPendingUser(user);
+      setTempToken('session-token');
+    } else if (!parsedUser) {
+      const saved = localStorage.getItem('user_session');
+      if (saved) {
+        try {
+          const u = JSON.parse(saved);
+          if (u) {
+            parsedUser = u;
+            setPendingUser(u);
+            setTempToken('session-token');
+          }
+        } catch (e) {}
+      }
+    }
+
     if (!parsedUser) {
       toast.error('I think you do not have an account, so first create an account.');
       setTimeout(() => navigate('/signup'), 1500);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (pendingUser) {

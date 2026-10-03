@@ -5,6 +5,8 @@ import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { PlanProvider } from './context/PlanContext';
 import { ToastProvider } from './components/common/Toast';
+import { useAuth } from './hooks/useAuth';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Layouts
 import AuthLayout from './layouts/AuthLayout';
@@ -92,54 +94,56 @@ function App() {
       <AuthProvider>
         <PlanProvider>
           <NotificationProvider>
-            <Routes>
-              {/* 1. BEAUTIFUL LANDING PAGE (Application Start & Post-Logout Landing) */}
-              <Route element={<PublicLayout />}>
-                <Route path="/" element={<Landing />} />
-                <Route path="/verify-hash" element={<PublicVerify />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/price-comparison" element={<PriceComparison />} />
+            <ErrorBoundary>
+              <Routes>
+                {/* 1. BEAUTIFUL LANDING PAGE (Application Start & Post-Logout Landing) */}
+                <Route element={<PublicLayout />}>
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/verify-hash" element={<PublicVerify />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/price-comparison" element={<PriceComparison />} />
+                </Route>
+
+              {/* Standalone Neobank Route (Protected) */}
+              <Route path="/neobank" element={<ProtectedRoute><Neobank /></ProtectedRoute>} />
+
+              {/* 2. AUTHENTICATION PAGES (Sign In & Create Account Forms) */}
+              <Route element={<AuthLayout />}>
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
+                <Route path="/verify-email/:token" element={<VerifyEmail />} />
               </Route>
 
-            {/* Standalone Neobank Route (Protected) */}
-            <Route path="/neobank" element={<ProtectedRoute><Neobank /></ProtectedRoute>} />
+              {/* Identity Verification Page (Protected by AuthGuard) */}
+              <Route path="/verify-identity" element={<AuthGuard><IdentityVerification /></AuthGuard>} />
 
-            {/* 2. AUTHENTICATION PAGES (Sign In & Create Account Forms) */}
-            <Route element={<AuthLayout />}>
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password/:token" element={<ResetPassword />} />
-              <Route path="/verify-email/:token" element={<VerifyEmail />} />
-            </Route>
+              {/* 3. PROTECTED DASHBOARD ROUTES (Product Dashboard) */}
+              <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/fair-price" element={<FairPrice />} />
+                <Route path="/documents" element={<Documents />} />
+                <Route path="/documents/:id" element={<DocumentDetail />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/verifications" element={<Verifications />} />
+                <Route path="/blockchain-health" element={<BlockchainHealth />} />
+                <Route path="/wallet" element={<Wallet />} />
 
-            {/* Identity Verification Page (Protected by AuthGuard) */}
-            <Route path="/verify-identity" element={<AuthGuard><IdentityVerification /></AuthGuard>} />
+                <Route path="/analytics" element={<AdminAnalytics />} />
+                <Route path="/admin/analytics" element={<AdminAnalytics />} />
 
-            {/* 3. PROTECTED DASHBOARD ROUTES (Product Dashboard) */}
-            <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/fair-price" element={<FairPrice />} />
-              <Route path="/documents" element={<Documents />} />
-              <Route path="/documents/:id" element={<DocumentDetail />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/verifications" element={<Verifications />} />
-              <Route path="/blockchain-health" element={<BlockchainHealth />} />
-              <Route path="/wallet" element={<Wallet />} />
+                {/* Admin-only routes */}
+                <Route path="/admin/users" element={<RoleRoute allowedRoles={['admin']}><AdminUsers /></RoleRoute>} />
+                <Route path="/admin/audit" element={<AdminAudit />} />
+              </Route>
 
-              <Route path="/analytics" element={<AdminAnalytics />} />
-              <Route path="/admin/analytics" element={<AdminAnalytics />} />
-
-              {/* Admin-only routes */}
-              <Route path="/admin/users" element={<RoleRoute allowedRoles={['admin']}><AdminUsers /></RoleRoute>} />
-              <Route path="/admin/audit" element={<AdminAudit />} />
-            </Route>
-
-            {/* 404 Catch-all */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              {/* 404 Catch-all */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ErrorBoundary>
 
           {/* Global Toast Notifications */}
           <ToastProvider />
