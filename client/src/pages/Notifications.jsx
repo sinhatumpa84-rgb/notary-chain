@@ -15,16 +15,16 @@ const Notifications = () => {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-bold text-[#2D2A27] tracking-tight">Notification Center</h1>
-          <p className="text-[13px] text-[#9B9490] mt-0.5">
+          <h1 className="text-xl sm:text-[22px] font-bold text-[#2D2A27] tracking-tight">Notification Center</h1>
+          <p className="text-[12px] sm:text-[13px] text-[#9B9490] mt-0.5">
             System notifications, security audits, and blockchain verification alerts
           </p>
         </div>
         <button
           onClick={markAllAsRead}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#2D6A4F] text-white text-xs font-semibold hover:bg-[#245741] transition-colors shadow-xs"
+          className="flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 rounded-lg bg-[#2D6A4F] text-white text-xs font-semibold hover:bg-[#245741] transition-colors shadow-xs w-full sm:w-auto min-h-[44px] sm:min-h-0"
         >
           <Check className="w-4 h-4" />
           Mark all as read
@@ -44,7 +44,7 @@ const Notifications = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               onClick={() => markAsRead(notifId)}
-              className={`p-5 rounded-xl border transition-all cursor-pointer flex items-start gap-4 ${
+              className={`p-3.5 sm:p-5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 sm:gap-4 ${
                 n.isRead
                   ? 'bg-white border-[#E9E4DD] opacity-85'
                   : 'bg-[#FAF8F4] border-[#2D6A4F]/40 shadow-xs'

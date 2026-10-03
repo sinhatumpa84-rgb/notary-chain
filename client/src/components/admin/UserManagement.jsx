@@ -6,8 +6,9 @@ const UserManagement = () => {
   return (
     <DashboardLayout title="User Management" subtitle="Manage system users and roles">
       <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden backdrop-blur-sm">
-        <table className="w-full text-left">
-          <thead className="bg-slate-800/50 border-b border-slate-700">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[550px]">
+            <thead className="bg-slate-800/50 border-b border-slate-700">
             <tr className="text-slate-400 text-sm">
               <th className="p-4 font-medium">User</th>
               <th className="p-4 font-medium">Role</th>
