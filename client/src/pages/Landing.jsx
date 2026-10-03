@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   FileText, ShieldCheck, ArrowRight, LogIn, UserPlus, ChevronRight, Sun, Moon,
   Upload, Brain, Shield, AlertTriangle, Hash, Link as LinkIcon, QrCode, Globe,
-  CreditCard, Activity, Building2, Key, Server
+  CreditCard, Activity, Building2, Key, Server, Sparkles, Menu, X
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import LoadingScreen from '../components/LoadingScreen';
@@ -12,7 +12,7 @@ import LoadingScreen from '../components/LoadingScreen';
 /* ── 3D Floating & Rotating Gold Coin Component ─────────────────────────── */
 const AnimatedGoldCoin = () => {
   return (
-    <div className="relative w-32 h-32 sm:w-40 sm:h-40 mx-auto mb-8 perspective-1000">
+    <div className="relative w-28 h-28 sm:w-40 sm:h-40 mx-auto mb-6 sm:mb-8 perspective-1000">
       {/* Glow aura */}
       <div className="absolute inset-0 rounded-full bg-[#B5883D]/25 filter blur-xl animate-pulse" />
 
@@ -92,6 +92,7 @@ const Landing = () => {
   const { isDark, toggleTheme } = useTheme();
   const [showAuthCards, setShowAuthCards] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <>
@@ -115,38 +116,119 @@ const Landing = () => {
 
       {/* ── Sticky Full-Width Navbar ────────────────────────── */}
       <nav className="fixed top-0 w-full z-50 bg-[#FAF8F4]/95 backdrop-blur-sm border-b border-[#E8E2DA] transition-colors">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setShowAuthCards(false)}>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-2.5 cursor-pointer shrink-0" onClick={() => { setShowAuthCards(false); setMobileMenuOpen(false); }}>
             <div className="w-8 h-8 rounded-xl bg-[#2D6A4F] flex items-center justify-center shadow-xs">
               <FileText className="w-4 h-4 text-white" />
             </div>
-            <span className="font-display font-700 text-xl text-[#2E2A26] tracking-tight">NotaryChain</span>
+            <span className="font-display font-700 text-lg sm:text-xl text-[#2E2A26] tracking-tight">NotaryChain</span>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-1.5 sm:gap-6">
             <a href="#pricing" className="hidden md:block text-sm font-semibold text-[#55504B] hover:text-[#2D6A4F] transition-colors">
               Pricing
             </a>
-            <div className="flex items-center gap-3">
-              {/* Dark/Bright Mode Toggle Button */}
-            <button
-              onClick={toggleTheme}
-              title={`Switch to ${isDark ? 'Bright (Light)' : 'Dark'} Mode`}
-              className="p-2.5 rounded-xl text-[#7B746E] hover:text-[#2E2A26] hover:bg-[#F6F3EE] border border-[#E8E2DA] transition-all flex items-center justify-center"
-            >
-              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-[#52796F]" />}
-            </button>
+            <div className="flex items-center gap-1.5 sm:gap-3">
+              <button
+                onClick={() => navigate('/price-comparison')}
+                className="hidden sm:flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#2D6A4F] bg-[#F0FAF5] hover:bg-[#E0F4EB] border border-[#B3E4CC] px-3.5 py-2 rounded-xl transition-all shadow-xs cursor-pointer shrink-0"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#2D6A4F]" />
+                <span>AI Price Comparison</span>
+              </button>
 
-            <button
-              onClick={() => navigate('/login')}
-              className="text-sm font-semibold text-[#55504B] hover:text-[#2D6A4F] px-4 py-2.5 transition-colors"
+              {/* Dark/Bright Mode Toggle Button */}
+              <button
+                onClick={toggleTheme}
+                title={`Switch to ${isDark ? 'Bright (Light)' : 'Dark'} Mode`}
+                className="p-2 sm:p-2.5 rounded-xl text-[#7B746E] hover:text-[#2D2A27] hover:bg-[#F6F3EE] border border-[#E8E2DA] transition-all flex items-center justify-center cursor-pointer min-w-[38px] min-h-[38px]"
+              >
+                {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-[#52796F]" />}
+              </button>
+
+              <button
+                onClick={() => navigate('/login')}
+                className="hidden xs:inline-block text-xs sm:text-sm font-semibold text-[#55504B] hover:text-[#2D6A4F] px-2 sm:px-4 py-1.5 sm:py-2.5 transition-colors shrink-0"
+              >
+                Sign In
+              </button>
+
+              <button
+                onClick={() => setShowAuthCards(true)}
+                className="text-xs sm:text-sm font-semibold bg-[#2D6A4F] text-white px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-xl hover:bg-[#245741] transition-all shadow-xs shrink-0"
+              >
+                Get Started
+              </button>
+
+              {/* Mobile hamburger menu button */}
+              <button
+                onClick={() => setMobileMenuOpen(prev => !prev)}
+                className="md:hidden p-2 rounded-xl text-[#7B746E] hover:text-[#2D2A27] hover:bg-[#F6F3EE] border border-[#E8E2DA] transition-all flex items-center justify-center cursor-pointer min-w-[38px] min-h-[38px]"
+                aria-label="Toggle navigation menu"
+              >
+                {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Navigation Dropdown */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden bg-white/98 border-b border-[#E8E2DA] px-4 py-4 space-y-2 shadow-lg overflow-hidden backdrop-blur-md"
             >
-              Sign In
-            </button>
-            <button
-              onClick={() => setShowAuthCards(true)}
-              className="text-sm font-semibold bg-[#2D6A4F] text-white px-5 py-2.5 rounded-xl hover:bg-[#245741] transition-all shadow-xs"
-            >
+              <div className="flex flex-col space-y-1 text-xs font-semibold text-[#55504B]">
+                <a
+                  href="#features"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-3 py-2.5 rounded-xl hover:bg-[#F6F3EE] min-h-[44px] flex items-center"
+                >
+                  Features & Workflow
+                </a>
+                <a
+                  href="#pricing"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-3 py-2.5 rounded-xl hover:bg-[#F6F3EE] min-h-[44px] flex items-center"
+                >
+                  Pricing & Business Model
+                </a>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); navigate('/price-comparison'); }}
+                  className="w-full text-left px-3 py-2.5 rounded-xl bg-[#F0FAF5] text-[#2D6A4F] font-bold min-h-[44px] flex items-center gap-2 border border-[#B3E4CC]"
+                >
+                  <Sparkles className="w-4 h-4 text-[#2D6A4F]" />
+                  <span>AI Price Comparison</span>
+                </button>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); navigate('/verify-hash'); }}
+                  className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[#F6F3EE] min-h-[44px] flex items-center gap-2"
+                >
+                  <Hash className="w-4 h-4 text-[#7B746E]" />
+                  <span>Public Hash Verifier</span>
+                </button>
+                <div className="pt-2 border-t border-[#E8E2DA] flex gap-2">
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
+                    className="flex-1 py-2.5 rounded-xl border border-[#E8E2DA] text-center font-bold text-xs hover:bg-[#F6F3EE] min-h-[44px]"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); setShowAuthCards(true); }}
+                    className="flex-1 py-2.5 rounded-xl bg-[#2D6A4F] text-white text-center font-bold text-xs hover:bg-[#245741] min-h-[44px]"
+                  >
+                    Get Started
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>     >
               Get Started
             </button>
           </div>
@@ -155,7 +237,7 @@ const Landing = () => {
       </nav>
 
       {/* ── Hero Presentation Section ────────────────────────── */}
-      <section className="pt-36 pb-20 px-6 relative overflow-hidden min-h-[85vh] flex items-center justify-center">
+      <section className="pt-28 sm:pt-36 pb-16 sm:pb-20 px-4 sm:px-6 relative overflow-hidden min-h-[85vh] flex items-center justify-center">
         <div className="absolute inset-0 bg-dots opacity-40 pointer-events-none" />
 
         <div className="relative max-w-4xl mx-auto text-center w-full">
@@ -178,10 +260,10 @@ const Landing = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-[#2D6A4F] bg-[#F0FAF5] border border-[#B3E4CC] px-5 py-2 rounded-full mb-6 shadow-xs"
+                  className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-[#2D6A4F] bg-[#F0FAF5] border border-[#B3E4CC] px-3 sm:px-5 py-1.5 sm:py-2 rounded-full mb-6 shadow-xs max-w-full text-center"
                 >
-                  <ShieldCheck className="w-4 h-4" />
-                  Polygon Blockchain Anchored · AI Verified · Legally Binding
+                  <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  <span className="truncate sm:whitespace-normal">Polygon Blockchain Anchored · AI Verified · Legally Binding</span>
                 </motion.div>
 
                 {/* 2. PRODUCT TITLE */}
@@ -189,7 +271,7 @@ const Landing = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.05 }}
-                  className="font-display text-4xl sm:text-6xl md:text-7xl font-extrabold text-[#2E2A26] dark:text-[#F3F1ED] leading-[1.12] tracking-tight mb-6"
+                  className="font-display text-2xl xs:text-3xl sm:text-6xl md:text-7xl font-extrabold text-[#2E2A26] dark:text-[#F3F1ED] leading-[1.15] tracking-tight mb-6"
                 >
                   <span className="block font-800 text-[#2E2A26] dark:text-white tracking-tight">
                     Institutional-Grade
@@ -224,7 +306,7 @@ const Landing = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.1 }}
-                  className="text-lg sm:text-xl text-[#55504B] leading-relaxed mb-10 max-w-2xl mx-auto font-normal"
+                  className="text-base sm:text-xl text-[#55504B] leading-relaxed mb-8 sm:mb-10 max-w-2xl mx-auto font-normal px-2"
                 >
                   NotaryChain combines AI-powered OCR document analysis, biometric identity checks, and immutable Polygon smart contract anchoring for enterprise teams.
                 </motion.p>
@@ -239,7 +321,7 @@ const Landing = () => {
                   <button
                     id="landing-get-started-btn"
                     onClick={() => setShowAuthCards(true)}
-                    className="inline-flex items-center justify-center gap-3 bg-[#2D6A4F] text-white font-bold px-10 py-4.5 rounded-xl hover:bg-[#245741] transition-all shadow-card hover:shadow-card-hover text-base font-display"
+                    className="inline-flex items-center justify-center gap-3 bg-[#2D6A4F] text-white font-bold px-8 sm:px-10 py-3.5 sm:py-4.5 rounded-xl hover:bg-[#245741] transition-all shadow-card hover:shadow-card-hover text-sm sm:text-base font-display cursor-pointer"
                   >
                     Get Started
                     <ArrowRight className="w-5 h-5" />
@@ -372,12 +454,12 @@ const Landing = () => {
       </section>
 
       {/* ── 'Trusted By' / Social Proof Section ──────────────────────── */}
-      <section className="py-16 px-6 bg-white border-y border-[#E8E2DA] transition-colors relative z-10">
+      <section className="py-12 sm:py-16 px-4 sm:px-6 bg-white border-y border-[#E8E2DA] transition-colors relative z-10">
         <div className="max-w-6xl mx-auto text-center">
-          <p className="text-sm font-bold text-[#7B746E] uppercase tracking-widest mb-10">
+          <p className="text-xs sm:text-sm font-bold text-[#7B746E] uppercase tracking-widest mb-6 sm:mb-10">
             Built for enterprises, law firms, banks, and governments
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-8">
             {[
               { label: 'Documents Verified', value: '2.4M+' },
               { label: 'Trust Score Accuracy', value: '99.9%' },
@@ -390,10 +472,10 @@ const Landing = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="flex flex-col items-center justify-center p-6 rounded-2xl bg-[#FAF8F4] border border-[#E8E2DA]"
+                className="flex flex-col items-center justify-center p-3.5 sm:p-6 rounded-2xl bg-[#FAF8F4] border border-[#E8E2DA]"
               >
-                <div className="text-3xl md:text-4xl font-display font-800 text-[#2D6A4F] mb-2">{stat.value}</div>
-                <div className="text-sm font-medium text-[#55504B]">{stat.label}</div>
+                <div className="text-2xl sm:text-3xl md:text-4xl font-display font-800 text-[#2D6A4F] mb-1 sm:mb-2">{stat.value}</div>
+                <div className="text-xs sm:text-sm font-medium text-[#55504B] text-center">{stat.label}</div>
               </motion.div>
             ))}
           </div>
@@ -457,9 +539,9 @@ const Landing = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="bg-white p-8 rounded-2xl border border-[#E8E2DA] shadow-sm relative z-10 hover:shadow-md transition-shadow"
+                className="bg-white p-5 sm:p-8 rounded-2xl border border-[#E8E2DA] shadow-sm relative z-10 hover:shadow-md transition-shadow"
               >
-                <div className="w-12 h-12 bg-[#F0FAF5] text-[#2D6A4F] rounded-xl flex items-center justify-center mb-6 border border-[#B3E4CC]">
+                <div className="w-12 h-12 bg-[#F0FAF5] text-[#2D6A4F] rounded-xl flex items-center justify-center mb-4 sm:mb-6 border border-[#B3E4CC]">
                   <step.icon className="w-6 h-6" />
                 </div>
                 <h3 className="text-xl font-bold text-[#2E2A26] mb-2">{step.title}</h3>
