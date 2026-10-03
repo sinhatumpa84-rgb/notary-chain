@@ -289,28 +289,28 @@ const DocumentDetails = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-between py-2 border-b border-[#E8E2DA]">
+                <div className="flex flex-col sm:flex-row sm:justify-between py-2 border-b border-[#E8E2DA] gap-0.5 sm:gap-2">
                   <span className="text-[#7B746E]">Upload Timestamp</span>
                   <span className="font-semibold text-[#2E2A26]">
                     {docData?.createdAt ? new Date(docData.createdAt).toUTCString() : 'Recent'}
                   </span>
                 </div>
 
-                <div className="flex justify-between py-2 border-b border-[#E8E2DA]">
+                <div className="flex flex-col sm:flex-row sm:justify-between py-2 border-b border-[#E8E2DA] gap-0.5 sm:gap-2">
                   <span className="text-[#7B746E]">Uploader Identity</span>
                   <span className="font-semibold text-[#2D2A27]">
                     {docData?.uploadedBy?.firstName} {docData?.uploadedBy?.lastName} ({docData?.uploadedBy?.email || 'verified'})
                   </span>
                 </div>
 
-                <div className="flex justify-between py-2 border-b border-[#E8E2DA]">
+                <div className="flex flex-col sm:flex-row sm:justify-between py-2 border-b border-[#E8E2DA] gap-0.5 sm:gap-2">
                   <span className="text-[#7B746E]">Blockchain Network</span>
                   <span className="font-semibold text-[#2D6A4F] flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-[#2D6A4F]" /> Polygon Amoy (Testnet Chain ID 80002)
                   </span>
                 </div>
 
-                <div className="flex justify-between py-2">
+                <div className="flex flex-col sm:flex-row sm:justify-between py-2 gap-0.5 sm:gap-2">
                   <span className="text-[#7B746E]">Smart Contract Proof</span>
                   <a
                     href={`https://amoy.polygonscan.com/tx/${blockchainTx}`}

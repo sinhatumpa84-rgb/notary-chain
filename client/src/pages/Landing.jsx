@@ -228,12 +228,6 @@ const Landing = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </nav>     >
-              Get Started
-            </button>
-          </div>
-          </div>
-        </div>
       </nav>
 
       {/* ── Hero Presentation Section ────────────────────────── */}

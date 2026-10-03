@@ -204,7 +204,7 @@ const FaceScannerModal = ({ isOpen, onClose, mode = 'login', onSuccess }) => {
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-md p-4 sm:p-6 bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden"
+          className="relative w-full max-w-md p-4 sm:p-6 bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-y-auto max-h-[94vh]"
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
@@ -221,14 +221,14 @@ const FaceScannerModal = ({ isOpen, onClose, mode = 'login', onSuccess }) => {
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/50 hover:bg-slate-800 transition-colors"
+              className="p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/50 hover:bg-slate-800 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
             >
               <CloseIcon size={20} />
             </button>
           </div>
 
           {/* Webcam Viewport */}
-          <div className="relative w-full aspect-[4/3] bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center">
+          <div className="relative w-full aspect-[4/3] max-h-[46vh] sm:max-h-none bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center">
             <video
               ref={videoRef}
               playsInline
@@ -239,7 +239,7 @@ const FaceScannerModal = ({ isOpen, onClose, mode = 'login', onSuccess }) => {
 
             {/* Target Reticle */}
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-              <div className={`w-44 sm:w-52 h-52 sm:h-64 rounded-[50%] border-2 transition-all duration-300 ${
+              <div className={`w-36 xs:w-44 sm:w-52 h-44 xs:h-52 sm:h-64 rounded-[50%] border-2 transition-all duration-300 ${
                 authState === 'FACE_DETECTED'
                   ? 'border-emerald-400 shadow-[0_0_30px_rgba(52,211,153,0.6)]'
                   : authState === 'QUALITY_CHECK_FAILED'

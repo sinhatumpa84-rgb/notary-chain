@@ -65,25 +65,25 @@ const BankDashboard = () => {
 
       {/* ── Verification Queue Table ── */}
       <div className="bg-white border border-[#E9E4DD] rounded-xl overflow-hidden shadow-xs">
-        <div className="p-4 border-b border-[#E9E4DD] flex items-center justify-between">
+        <div className="p-4 border-b border-[#E9E4DD] flex flex-col xs:flex-row xs:items-center justify-between gap-2">
           <div>
             <h3 className="text-sm font-bold text-[#2D2A27]">Verification Queue</h3>
             <p className="text-[11px] text-[#9B9490]">Active compliance review requests</p>
           </div>
-          <span className="text-xs font-semibold text-[#2D6A4F] bg-[#F0FAF5] px-2.5 py-1 rounded-full border border-[#C3DDD0]">
+          <span className="text-xs font-semibold text-[#2D6A4F] bg-[#F0FAF5] px-2.5 py-1 rounded-full border border-[#C3DDD0] w-fit">
             3 Action Required
           </span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full min-w-[550px] text-left border-collapse">
             <thead>
               <tr className="bg-[#FAF8F4] border-b border-[#E9E4DD] text-[11px] font-bold text-[#7B746E] uppercase tracking-wider">
-                <th className="py-3 px-4">Document ID</th>
-                <th className="py-3 px-4">Company</th>
-                <th className="py-3 px-4">Type</th>
-                <th className="py-3 px-4">Risk Score</th>
-                <th className="py-3 px-4 text-right">Action</th>
+                <th className="py-3 px-4 whitespace-nowrap">Document ID</th>
+                <th className="py-3 px-4 whitespace-nowrap">Company</th>
+                <th className="py-3 px-4 whitespace-nowrap">Type</th>
+                <th className="py-3 px-4 whitespace-nowrap">Risk Score</th>
+                <th className="py-3 px-4 text-right whitespace-nowrap">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E9E4DD] text-xs">

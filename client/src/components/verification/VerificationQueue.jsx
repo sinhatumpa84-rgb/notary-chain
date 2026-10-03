@@ -68,7 +68,7 @@ const VerificationQueue = () => {
 
   return (
     <Card className="p-0 overflow-hidden">
-      <div className="p-5 bg-[#F6F3EE] border-b border-[#E8E2DA] flex justify-between items-center">
+      <div className="p-4 sm:p-5 bg-[#F6F3EE] border-b border-[#E8E2DA] flex flex-col xs:flex-row xs:items-center justify-between gap-2">
         <div>
           <h3 className="font-display font-bold text-base text-[#2E2A26] flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-[#2D6A4F]" /> Verification Queue
@@ -77,20 +77,20 @@ const VerificationQueue = () => {
             {items.length === 1 ? '1 document awaiting approval' : `${items.length} documents awaiting approval`}
           </p>
         </div>
-        <Badge variant={items.length > 0 ? 'primary' : 'neutral'} size="sm">
+        <Badge variant={items.length > 0 ? 'primary' : 'neutral'} size="sm" className="w-fit">
           {items.length} Pending
         </Badge>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full min-w-[550px] text-left border-collapse">
           <thead>
             <tr className="border-b border-[#E8E2DA] text-xs font-semibold text-[#7B746E] uppercase tracking-wider bg-[#FFFDF9]">
-              <th className="p-4">Document Title</th>
-              <th className="p-4">Requester</th>
-              <th className="p-4">Priority</th>
-              <th className="p-4">Status</th>
-              <th className="p-4 text-right">Actions</th>
+              <th className="p-4 whitespace-nowrap">Document Title</th>
+              <th className="p-4 whitespace-nowrap">Requester</th>
+              <th className="p-4 whitespace-nowrap">Priority</th>
+              <th className="p-4 whitespace-nowrap">Status</th>
+              <th className="p-4 text-right whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E8E2DA] text-xs">

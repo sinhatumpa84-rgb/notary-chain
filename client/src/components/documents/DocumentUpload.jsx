@@ -264,18 +264,20 @@ const DocumentUpload = ({ isOpen, onClose, onSuccess }) => {
                 className="p-6 space-y-5"
               >
                 {/* Upload success banner */}
-                <div className="flex items-center gap-3 p-4 bg-[#F0FAF5] border border-[#B3E4CC] rounded-xl">
-                  <CheckCircle2 className="w-5 h-5 text-[#2D6A4F] shrink-0" />
-                  <div>
-                    <p className="text-sm font-bold text-[#2D6A4F]">
-                      {isBundle ? `Document Bundle Detected (${bundle.total_documents} Documents)` : 'Document uploaded successfully'}
-                    </p>
-                    <p className="text-xs text-[#52796F]">{result.document?.originalFileName || file?.name}</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#F0FAF5] border border-[#B3E4CC] rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-[#2D6A4F] shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-[#2D6A4F]">
+                        {isBundle ? `Document Bundle Detected (${bundle.total_documents} Documents)` : 'Document uploaded successfully'}
+                      </p>
+                      <p className="text-xs text-[#52796F] truncate">{result.document?.originalFileName || file?.name}</p>
+                    </div>
                   </div>
                   {result.document?.hash && (
-                    <div className="ml-auto text-right">
+                    <div className="text-left sm:text-right pt-2 sm:pt-0 border-t sm:border-t-0 border-[#B3E4CC]/60">
                       <p className="text-[10px] text-[#7B746E] font-mono">Canonical Bundle SHA-256</p>
-                      <p className="text-[10px] font-mono text-[#2E2A26]">{result.document.hash.substring(0, 16)}…</p>
+                      <p className="text-[10px] font-mono text-[#2E2A26] break-all">{result.document.hash.substring(0, 16)}…</p>
                     </div>
                   )}
                 </div>
@@ -284,14 +286,14 @@ const DocumentUpload = ({ isOpen, onClose, onSuccess }) => {
                 {isBundle && (
                   <div className="space-y-3">
                     {/* Bundle Summary Banner */}
-                    <div className="p-3.5 bg-[#F6F3EE] rounded-xl border border-[#E8E2DA] flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                    <div className="p-3.5 bg-[#F6F3EE] rounded-xl border border-[#E8E2DA] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                         <span className="text-xs font-bold text-[#2E2A26]">BUNDLE SUMMARY</span>
                         <span className="text-xs text-[#7B746E]">
                           <strong>{bundle.total_documents}</strong> documents • <strong>{bundle.total_pages}</strong> total pages
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           bundle.highest_risk === 'HIGH' ? 'bg-red-100 text-red-800' :
                           bundle.highest_risk === 'MEDIUM' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'

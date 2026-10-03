@@ -141,36 +141,36 @@ const Web3WalletModal = ({ isOpen, onClose, onSaveSuccess }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#2E2A26]/50 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#2E2A26]/50 backdrop-blur-xs">
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.96 }}
-        className="w-full max-w-lg bg-white border border-[#E8E2DA] rounded-2xl shadow-card-lg overflow-hidden relative"
+        className="w-full max-w-lg bg-white border border-[#E8E2DA] rounded-2xl shadow-card-lg overflow-hidden relative max-h-[92vh] flex flex-col"
       >
         {/* Header */}
-        <div className="p-6 border-b border-[#E8E2DA] flex items-center justify-between bg-[#F6F3EE]/60">
+        <div className="p-4 sm:p-6 border-b border-[#E8E2DA] flex items-center justify-between bg-[#F6F3EE]/60 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#2D6A4F] text-white flex items-center justify-center font-bold shadow-xs">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#2D6A4F] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
               <Wallet className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-[#2E2A26] tracking-tight">Web3 Wallet Integration</h3>
-              <p className="text-xs text-[#7B746E]">Connect MetaMask or enter your Polygon wallet address</p>
+              <h3 className="text-sm sm:text-base font-bold text-[#2E2A26] tracking-tight">Web3 Wallet Integration</h3>
+              <p className="text-[11px] sm:text-xs text-[#7B746E]">Connect MetaMask or enter Polygon address</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-[#7B746E] hover:text-[#2E2A26] hover:bg-[#E8E2DA] transition-colors"
+            className="p-2 rounded-lg text-[#7B746E] hover:text-[#2E2A26] hover:bg-[#E8E2DA] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-5 overflow-y-auto">
           {/* Active Wallet Display if Connected */}
           {(currentWallet || manualAddress) ? (
-            <div className="p-4 rounded-xl bg-[#F0FAF5] border border-[#B3E4CC] space-y-3">
+            <div className="p-3.5 sm:p-4 rounded-xl bg-[#F0FAF5] border border-[#B3E4CC] space-y-3">
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#2D6A4F] text-white">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
@@ -215,11 +215,11 @@ const Web3WalletModal = ({ isOpen, onClose, onSaveSuccess }) => {
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div className="bg-white p-3 rounded-xl border border-[#E8E2DA]">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#7B746E]">Live POL Balance</span>
-                  <p className="text-lg font-bold text-[#2E2A26] mt-0.5">{liveBalance.balancePol} POL</p>
+                  <p className="text-base sm:text-lg font-bold text-[#2E2A26] mt-0.5">{liveBalance.balancePol} POL</p>
                 </div>
                 <div className="bg-white p-3 rounded-xl border border-[#E8E2DA]">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#7B746E]">Est. USD Value</span>
-                  <p className="text-lg font-bold text-[#2D6A4F] mt-0.5">${liveBalance.balanceUsdc}</p>
+                  <p className="text-base sm:text-lg font-bold text-[#2D6A4F] mt-0.5">${liveBalance.balanceUsdc}</p>
                 </div>
               </div>
             </div>
@@ -242,7 +242,7 @@ const Web3WalletModal = ({ isOpen, onClose, onSaveSuccess }) => {
               type="button"
               onClick={handleConnectMetaMask}
               disabled={connecting}
-              className="mt-2 w-full flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl bg-[#2D6A4F] hover:bg-[#1B4332] text-white font-bold text-sm shadow-sm transition-all disabled:opacity-60"
+              className="mt-2 w-full flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl bg-[#2D6A4F] hover:bg-[#1B4332] text-white font-bold text-sm shadow-sm transition-all disabled:opacity-60 min-h-[44px]"
             >
               {connecting ? (
                 <>
@@ -264,7 +264,7 @@ const Web3WalletModal = ({ isOpen, onClose, onSaveSuccess }) => {
           {/* Option 2: Enter / Paste Web3 Wallet Address Manually */}
           <form onSubmit={handleManualSubmit} className="space-y-3">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#7B746E]">Option 2: Enter Wallet Address Manually</span>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 placeholder="0x19443302aC781A943AC33b2d228D7736d4E00FE4"
@@ -274,7 +274,7 @@ const Web3WalletModal = ({ isOpen, onClose, onSaveSuccess }) => {
               />
               <button
                 type="submit"
-                className="px-4 py-2.5 bg-[#2E2A26] hover:bg-black text-white text-xs font-bold rounded-xl transition-all shadow-xs"
+                className="w-full sm:w-auto px-4 py-2.5 bg-[#2E2A26] hover:bg-black text-white text-xs font-bold rounded-xl transition-all shadow-xs min-h-[44px] sm:min-h-0"
               >
                 Save Wallet
               </button>
@@ -285,7 +285,7 @@ const Web3WalletModal = ({ isOpen, onClose, onSaveSuccess }) => {
           <div className="pt-2 flex justify-end">
             <button
               onClick={onClose}
-              className="px-5 py-2 rounded-xl bg-[#F6F3EE] hover:bg-[#E8E2DA] text-[#2E2A26] text-xs font-bold transition-all"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#F6F3EE] hover:bg-[#E8E2DA] text-[#2E2A26] text-xs font-bold transition-all min-h-[44px] sm:min-h-0"
             >
               Done & Proceed to Workspace
             </button>
