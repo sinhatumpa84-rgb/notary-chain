@@ -494,20 +494,20 @@ const IdentityVerification = () => {
   const isRegister = mode === 'register';
 
   return (
-    <div className="min-h-screen bg-[#FAF8F4] flex items-center justify-center p-4 lg:p-8 relative text-[#2E2A26]">
+    <div className="min-h-screen bg-[#FAF8F4] flex items-center justify-center p-3 sm:p-4 lg:p-8 relative text-[#2E2A26]">
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="w-full max-w-5xl bg-white border border-[#E8E2DA] rounded-3xl p-6 lg:p-12 shadow-card-lg relative z-10"
+        className="w-full max-w-5xl bg-white border border-[#E8E2DA] rounded-3xl p-4 sm:p-6 lg:p-12 shadow-card-lg relative z-10"
       >
         {/* Title Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#F0FAF5] border border-[#B3E4CC] text-[#2D6A4F] text-xs font-bold uppercase tracking-wider mb-3">
-            <Scan className="w-4 h-4" />
-            {isRegister ? 'MongoDB 128D Master Biometric Enrollment' : 'MongoDB Neural Face Authentication'}
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-[#F0FAF5] border border-[#B3E4CC] text-[#2D6A4F] text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-3 max-w-full text-center">
+            <Scan className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span className="truncate sm:whitespace-normal">{isRegister ? 'MongoDB 128D Master Biometric Enrollment' : 'MongoDB Neural Face Authentication'}</span>
           </div>
-          <h1 className="font-display text-3xl font-700 text-[#2E2A26] tracking-tight">
+          <h1 className="font-display text-2xl sm:text-3xl font-700 text-[#2E2A26] tracking-tight">
             {isRegister ? 'Enroll Account Biometric Key' : 'Confirm Your Identity'}
           </h1>
           <p className="text-[#55504B] text-sm mt-1 max-w-lg mx-auto">
@@ -680,7 +680,7 @@ const IdentityVerification = () => {
 
                   {/* Target Guide Oval */}
                   {authState !== 'AUTHENTICATED' && (
-                    <div className={`absolute inset-0 border-2 rounded-full my-6 mx-16 pointer-events-none transition-all duration-300 flex items-center justify-center ${
+                    <div className={`absolute inset-0 border-2 rounded-full my-3 sm:my-6 mx-4 sm:mx-16 pointer-events-none transition-all duration-300 flex items-center justify-center ${
                       authState === 'FACE_DETECTED'
                         ? 'border-emerald-400 border-solid shadow-[0_0_25px_rgba(52,211,153,0.5)]'
                         : authState === 'QUALITY_CHECK_FAILED'
@@ -690,7 +690,7 @@ const IdentityVerification = () => {
                         : 'border-[#B3E4CC]/60 border-dashed animate-pulse'
                     }`}>
                       {/* Detection Status Pill inside Camera */}
-                      <span className={`text-xs px-3.5 py-1.5 rounded-full font-semibold shadow-md transition-colors ${
+                      <span className={`text-[10px] sm:text-xs px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full font-semibold shadow-md transition-colors max-w-[90%] text-center truncate sm:whitespace-normal ${
                         authState === 'FACE_DETECTED'
                           ? 'bg-emerald-600 text-white'
                           : authState === 'QUALITY_CHECK_FAILED'
