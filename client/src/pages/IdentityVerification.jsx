@@ -518,12 +518,12 @@ const IdentityVerification = () => {
         </div>
 
         {/* Verification Method Chooser Tabs */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-[#F6F3EE] p-1.5 rounded-2xl border border-[#E8E2DA] flex gap-2 max-w-md w-full">
+        <div className="flex justify-center mb-6 sm:mb-8">
+          <div className="bg-[#F6F3EE] p-1.5 rounded-2xl border border-[#E8E2DA] flex flex-col xs:flex-row gap-1.5 sm:gap-2 max-w-md w-full">
             <button
               type="button"
               onClick={() => { setVerificationMethod('face'); setVerificationError(''); }}
-              className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 min-h-[40px] ${
                 verificationMethod === 'face'
                   ? 'bg-[#2D6A4F] text-white shadow-sm'
                   : 'text-[#55504B] hover:text-[#2E2A26] hover:bg-white/60'
@@ -536,7 +536,7 @@ const IdentityVerification = () => {
             <button
               type="button"
               onClick={() => { setVerificationMethod('password'); setVerificationError(''); }}
-              className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 min-h-[40px] ${
                 verificationMethod === 'password'
                   ? 'bg-[#2D6A4F] text-white shadow-sm'
                   : 'text-[#55504B] hover:text-[#2E2A26] hover:bg-white/60'
@@ -666,7 +666,7 @@ const IdentityVerification = () => {
           <div className="flex flex-col items-center space-y-5">
             {verificationMethod === 'face' ? (
               <>
-                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[#2E2A26] border-2 border-[#2D6A4F] shadow-inner flex items-center justify-center">
+                <div className="relative w-full aspect-[4/3] max-h-[46vh] sm:max-h-none rounded-2xl overflow-hidden bg-[#2E2A26] border-2 border-[#2D6A4F] shadow-inner flex items-center justify-center">
                   <video
                     ref={videoRef}
                     autoPlay
@@ -819,13 +819,14 @@ const IdentityVerification = () => {
                       </Button>
                     </div>
                   ) : authState === 'FAILED' ? (
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2.5">
                       <Button
                         variant="secondary"
                         fullWidth
                         size="lg"
                         onClick={handleRetry}
                         icon={RefreshCw}
+                        className="min-h-[44px]"
                       >
                         Retry Scan
                       </Button>
@@ -835,6 +836,7 @@ const IdentityVerification = () => {
                         size="lg"
                         onClick={handleSwitchToReEnrollment}
                         icon={Cpu}
+                        className="min-h-[44px]"
                       >
                         Re-register Face
                       </Button>

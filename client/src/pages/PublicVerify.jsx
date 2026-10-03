@@ -113,7 +113,7 @@ export default function PublicVerify() {
           {/* Hash Search Input */}
           <div className="space-y-2">
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500">Or Paste SHA-256 Hash</label>
-            <div className="flex gap-2">
+            <div className="flex flex-col xs:flex-row gap-2">
               <div className="relative flex-1 min-w-0">
                 <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
@@ -127,7 +127,7 @@ export default function PublicVerify() {
               <button
                 onClick={() => runVerification()}
                 disabled={verifying}
-                className="px-4 sm:px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all disabled:opacity-60 shrink-0 cursor-pointer"
+                className="w-full xs:w-auto px-4 sm:px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all disabled:opacity-60 shrink-0 cursor-pointer min-h-[44px] xs:min-h-0"
               >
                 {verifying ? 'Verifying...' : 'Verify'}
               </button>

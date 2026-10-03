@@ -129,10 +129,10 @@ const CompanyDashboard = () => {
     <div className="space-y-6">
 
       {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-[22px] font-bold text-[#2D2A27] tracking-tight">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <h1 className="text-xl sm:text-[22px] font-bold text-[#2D2A27] tracking-tight">
               Welcome back, {user?.name?.split(' ')[0] || 'there'} 👋
             </h1>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#F0FAF5] text-[#2D6A4F] border border-[#B3E4CC]">
@@ -140,24 +140,24 @@ const CompanyDashboard = () => {
               {currentPlan.name} Plan
             </span>
           </div>
-          <p className="text-[13px] text-[#9B9490] mt-0.5">
+          <p className="text-xs sm:text-[13px] text-[#9B9490] mt-0.5">
             Digital Trust Infrastructure · Polygon Neobank · {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-start">
           <Link
             to="/pricing"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#2D6A4F] text-white text-[12px] font-semibold hover:bg-[#1B4532] transition-colors shadow-xs"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#2D6A4F] text-white text-[12px] font-semibold hover:bg-[#1B4532] transition-colors shadow-xs"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Manage Plan</span>
           </Link>
           <button
             onClick={fetchDocs}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E9E4DD] bg-white text-[12px] font-medium text-[#55504B] hover:bg-[#F6F3EE] hover:text-[#2D2A27] transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[#E9E4DD] bg-white text-[12px] font-medium text-[#55504B] hover:bg-[#F6F3EE] hover:text-[#2D2A27] transition-colors cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Refresh</span>
+            <span className="inline">Refresh</span>
           </button>
         </div>
       </div>
@@ -166,7 +166,7 @@ const CompanyDashboard = () => {
       <Web3WalletSetupBanner />
 
       {/* ── Divided Section Selector Bar (Clean Segmented Tabs) ── */}
-      <div className="bg-white border border-[#E9E4DD] p-1.5 rounded-xl shadow-xs flex items-center gap-1 overflow-x-auto">
+      <div className="bg-white border border-[#E9E4DD] p-1.5 rounded-xl shadow-xs flex items-center gap-1 overflow-x-auto no-scrollbar">
         {SECTION_TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeSection === tab.id;
@@ -188,7 +188,7 @@ const CompanyDashboard = () => {
       </div>
 
       {/* ── Section 1: Executive Stat Cards (Always Visible) ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard
           label="Wallet Balance"
           value="Live"
@@ -448,8 +448,8 @@ const CompanyDashboard = () => {
               </div>
 
               {/* Toolbar */}
-              <div className="flex items-center gap-3 px-4 py-3 bg-[#FAF8F4] border-b border-[#E9E4DD]">
-                <div className="relative flex-1 max-w-sm">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 px-4 py-3 bg-[#FAF8F4] border-b border-[#E9E4DD]">
+                <div className="relative flex-1 max-w-full sm:max-w-sm">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#AAA49F]" />
                   <input
                     value={searchQuery}
@@ -459,12 +459,12 @@ const CompanyDashboard = () => {
                   />
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
                   {FILTER_TABS.map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setStatusFilter(tab)}
-                      className={`px-3 py-1 rounded-md text-[11px] font-semibold capitalize transition-colors ${
+                      className={`px-3 py-1 rounded-md text-[11px] font-semibold capitalize transition-colors shrink-0 ${
                         statusFilter === tab
                           ? 'bg-[#2D6A4F] text-white'
                           : 'text-[#7B746E] hover:bg-white'

@@ -96,15 +96,15 @@ const DocumentList = () => {
       {/* Table Card */}
       <div className="bg-white border border-[#E8E2DA] rounded-2xl overflow-hidden shadow-card">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full min-w-[600px] text-left border-collapse">
             <thead>
               <tr className="bg-[#F6F3EE] border-b border-[#E8E2DA] text-xs font-semibold text-[#7B746E] uppercase tracking-wider">
-                <th className="p-4">Document Name</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Category</th>
-                <th className="p-4">Uploaded</th>
-                <th className="p-4">Size</th>
-                <th className="p-4 text-right">Actions</th>
+                <th className="p-4 whitespace-nowrap">Document Name</th>
+                <th className="p-4 whitespace-nowrap">Status</th>
+                <th className="p-4 whitespace-nowrap">Category</th>
+                <th className="p-4 whitespace-nowrap">Uploaded</th>
+                <th className="p-4 whitespace-nowrap">Size</th>
+                <th className="p-4 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E8E2DA]">

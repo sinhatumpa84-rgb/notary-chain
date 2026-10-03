@@ -186,8 +186,8 @@ const BlockchainHealth = () => {
       {report && (
         <AnimatePresence>
           {/* Score + Summary */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            <div className="col-span-2 sm:col-span-1 flex flex-col items-center justify-center p-6 rounded-2xl bg-white border border-[#E8E2DA] shadow-card">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <div className="col-span-1 xs:col-span-2 sm:col-span-1 flex flex-col items-center justify-center p-5 sm:p-6 rounded-2xl bg-white border border-[#E8E2DA] shadow-card">
               <div className="relative w-20 h-20 mb-2">
                 <svg viewBox="0 0 100 100" className="w-20 h-20 -rotate-90">
                   <circle cx="50" cy="50" r="40" fill="none" stroke="#F6F3EE" strokeWidth="12" />

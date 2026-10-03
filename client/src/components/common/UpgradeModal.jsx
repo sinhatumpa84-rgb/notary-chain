@@ -27,7 +27,7 @@ export default function UpgradeModal({ isOpen, onClose }) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 font-sans">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -39,11 +39,11 @@ export default function UpgradeModal({ isOpen, onClose }) {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl ring-1 ring-[#E8E2DA]"
+            className="relative w-full max-w-md max-h-[92vh] overflow-y-auto rounded-2xl bg-white p-4 sm:p-6 text-left align-middle shadow-xl ring-1 ring-[#E8E2DA]"
           >
             <button
               onClick={onClose}
-              className="absolute right-4 top-4 rounded-full p-1 text-[#7B746E] hover:bg-[#FAF8F4] hover:text-[#2E2A26] transition-colors cursor-pointer"
+              className="absolute right-3 top-3 sm:right-4 sm:top-4 rounded-full p-2 text-[#7B746E] hover:bg-[#FAF8F4] hover:text-[#2E2A26] transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center"
             >
               <X className="h-5 w-5" />
             </button>
@@ -93,14 +93,14 @@ export default function UpgradeModal({ isOpen, onClose }) {
               <button
                 onClick={handleUpgradeToPro}
                 disabled={upgrading}
-                className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#2D6A4F] px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#1B4532] sm:w-auto cursor-pointer shadow-xs"
+                className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#2D6A4F] px-4 py-3 sm:py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#1B4532] sm:w-auto cursor-pointer shadow-xs min-h-[44px]"
               >
                 {upgrading ? 'Upgrading…' : 'Upgrade to Pro — ₹499/mo'}
                 <ArrowUpRight className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={onClose}
-                className="inline-flex w-full items-center justify-center rounded-lg bg-white px-4 py-2.5 text-xs font-semibold text-[#55504B] ring-1 ring-inset ring-[#E8E2DA] transition-colors hover:bg-[#FAF8F4] sm:w-auto cursor-pointer"
+                className="inline-flex w-full items-center justify-center rounded-xl bg-white px-4 py-3 sm:py-2.5 text-xs font-semibold text-[#55504B] ring-1 ring-inset ring-[#E8E2DA] transition-colors hover:bg-[#FAF8F4] sm:w-auto cursor-pointer min-h-[44px]"
               >
                 Maybe Later
               </button>

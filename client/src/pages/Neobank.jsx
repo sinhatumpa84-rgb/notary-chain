@@ -1064,7 +1064,8 @@ export default function Neobank() {
               💳
             </div>
             <span className="font-bold text-[13px] sm:text-[14px] whitespace-nowrap" style={{ color: T.textPrimary }}>
-              Polygon Open Money Stack
+              <span className="hidden xs:inline">Polygon Open Money Stack</span>
+              <span className="xs:hidden">Neobank</span>
             </span>
             <StatusPill label="v0.11 Sandbox" variant="green" />
           </div>
