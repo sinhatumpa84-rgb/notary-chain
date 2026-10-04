@@ -39,16 +39,23 @@ export const initiateRazorpayCheckout = async ({
   onDismiss,
   onError,
 }) => {
-  const isLoaded = await loadRazorpayScript();
-  if (!isLoaded || !window.Razorpay) {
-    if (onError) onError(new Error('Razorpay SDK failed to load. Please check your internet connection.'));
+  const razorpayKeyId = (import.meta.env.VITE_RAZORPAY_KEY_ID || keyId || '').trim();
+
+  if (!razorpayKeyId) {
+    const missingKeyError = new Error('Razorpay is not configured. Please add VITE_RAZORPAY_KEY_ID to your frontend environment.');
+    if (onError) onError(missingKeyError);
     return;
   }
 
-  const effectiveKeyId = keyId || import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_TjiWqgGfepDnJp';
+  const isLoaded = await loadRazorpayScript();
+  if (!isLoaded || !window.Razorpay) {
+    const sdkError = new Error('Razorpay SDK failed to load. Please check your internet connection.');
+    if (onError) onError(sdkError);
+    return;
+  }
 
   const options = {
-    key: effectiveKeyId,
+    key: razorpayKeyId,
     amount: amount,
     currency: currency,
     name: 'NotaryChain',
