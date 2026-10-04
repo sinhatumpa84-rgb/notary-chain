@@ -40,6 +40,7 @@ class AIModelRouter {
     this.digitalOceanInferenceKey = process.env.DIGITALOCEAN_INFERENCE_KEY || '';
     this.groqApiKey = process.env.GROQ_API_KEY || '';
     this.xaiApiKey = process.env.XAI_API_KEY || '';
+    this.geminiRequestQueue = Promise.resolve();
   }
 
   /**
@@ -85,35 +86,68 @@ class AIModelRouter {
   async callGemini(messages, temperature = 0.2, maxTokens = 1200) {
     if (!this.geminiApiKey) return null;
 
-    const geminiModels = ['gemini-3.8-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
-    for (const model of geminiModels) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.geminiApiKey}`;
-        const promptText = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
+    const queueOperation = async () => {
+      const geminiModels = ['gemini-3.8-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+      for (const model of geminiModels) {
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+          try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.geminiApiKey}`;
+            const promptText = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
 
-        const res = await axios.post(
-          url,
-          {
-            contents: [{ parts: [{ text: promptText }] }],
-            generationConfig: {
-              temperature,
-              maxOutputTokens: maxTokens,
-              responseMimeType: 'application/json'
+            const res = await axios.post(
+              url,
+              {
+                contents: [{ parts: [{ text: promptText }] }],
+                generationConfig: {
+                  temperature,
+                  maxOutputTokens: maxTokens
+                }
+              },
+              { timeout: 30000 }
+            );
+
+            const content = res.data?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
+            if (content) {
+              logger.info(`[AI Router] Successfully responded via Google Gemini (${model})`);
+              return { content, model: `Google Gemini (${model})` };
             }
-          },
-          { timeout: 15000 }
-        );
 
-        const content = res.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (content) {
-          logger.info(`[AI Router] Successfully responded via Google Gemini (${model})`);
-          return { content, model: `Google Gemini (${model})` };
+            const finishReason = res.data?.candidates?.[0]?.finishReason;
+            if (finishReason === 'SAFETY' || finishReason === 'RECITATION' || finishReason === 'BLOCKLIST') {
+              logger.warn(`[AI Router] Gemini model ${model} response blocked by safety:`, finishReason);
+              return null;
+            }
+
+            return null;
+          } catch (err) {
+            const status = err.response?.status;
+            const isTransient = status === 429 || status === 503 || err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || (!status && err.message && /timeout|network|socket|ECONN/i.test(err.message));
+            if (isTransient && attempt < 4) {
+              const delayMs = 2000 * (attempt + 1);
+              logger.warn(`[AI Router] Transient Gemini error on model ${model} (${status || 'network'}), retrying in ${delayMs}ms`);
+              await new Promise((resolve) => setTimeout(resolve, delayMs));
+              continue;
+            }
+            logger.warn(`[AI Router] Gemini model ${model} warning:`, err.response?.data?.error?.message || err.message);
+            break;
+          }
         }
-      } catch (err) {
-        logger.warn(`[AI Router] Gemini model ${model} warning:`, err.response?.data?.error?.message || err.message);
       }
+      return null;
+    };
+
+    const previous = this.geminiRequestQueue;
+    let release;
+    this.geminiRequestQueue = new Promise((resolve) => {
+      release = resolve;
+    });
+
+    try {
+      await previous;
+      return await queueOperation();
+    } finally {
+      release();
     }
-    return null;
   }
 
   /**

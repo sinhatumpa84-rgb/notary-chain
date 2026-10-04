@@ -15,43 +15,65 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GROQ_BASE_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODELS = ['openai/gpt-oss-120b', 'qwen/qwen3.6-27b', 'openai/gpt-oss-20b', 'groq/compound'];
 const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-1.5-flash'];
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function callGemini(messages, temperature = 0.35, max_tokens = 1400, jsonFormat = false) {
   if (!GEMINI_API_KEY) return null;
 
   for (const model of GEMINI_MODELS) {
-    try {
-      const payload = {
-        contents: messages.map((message) => ({
-          role: message.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: message.content || '' }]
-        })),
-        generationConfig: {
-          temperature,
-          maxOutputTokens: max_tokens,
-          ...(jsonFormat ? { responseMimeType: 'application/json' } : {})
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const payload = {
+          contents: messages.map((message) => ({
+            role: message.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: message.content || '' }]
+          })),
+          generationConfig: {
+            temperature,
+            maxOutputTokens: max_tokens,
+            ...(jsonFormat ? { responseMimeType: 'application/json' } : {})
+          }
+        };
+
+        const res = await axios.post(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+          payload,
+          {
+            timeout: 30000,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+
+        const content = res.data?.candidates?.[0]?.content?.parts
+          ?.map((part) => part.text)
+          .join('')
+          .trim();
+
+        if (content) {
+          return content;
         }
-      };
 
-      const res = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
-        payload,
-        {
-          timeout: 15000,
-          headers: { 'Content-Type': 'application/json' }
+        const finishReason = res.data?.candidates?.[0]?.finishReason;
+        if (finishReason === 'SAFETY' || finishReason === 'RECITATION' || finishReason === 'BLOCKLIST') {
+          logger.warn(`[Gemini] Model ${model} rejected response for safety:`, finishReason);
+          return null;
         }
-      );
 
-      const content = res.data?.candidates?.[0]?.content?.parts
-        ?.map((part) => part.text)
-        .join('')
-        .trim();
+        return null;
+      } catch (e) {
+        const status = e.response?.status;
+        const isTransient = status === 429 || status === 503 || e.code === 'ECONNABORTED' || e.code === 'ETIMEDOUT' || (!status && e.message && /timeout|network|socket|ECONN/i.test(e.message));
 
-      if (content) {
-        return content;
+        if (isTransient && attempt < 2) {
+          const delayMs = 500 * (attempt + 1);
+          logger.warn(`[Gemini] Transient error on model ${model} (${status || 'network'}), retrying in ${delayMs}ms`);
+          await sleep(delayMs);
+          continue;
+        }
+
+        logger.warn(`[Gemini] Model ${model} call warning:`, e.response?.data?.error?.message || e.message);
+        break;
       }
-    } catch (e) {
-      logger.warn(`[Gemini] Model ${model} call warning:`, e.response?.data?.error?.message || e.message);
     }
   }
 

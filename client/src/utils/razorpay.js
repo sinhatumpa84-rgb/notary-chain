@@ -63,9 +63,7 @@ export const initiateRazorpayCheckout = async ({
     image: '/favicon.ico',
     order_id: orderId,
     handler: function (response) {
-      if (typeof document !== 'undefined') {
-        document.body.classList.remove('razorpayTestModeWrapper');
-      }
+      cleanupCornerCleaner();
       if (onSuccess) {
         onSuccess({
           razorpay_order_id: response.razorpay_order_id,
@@ -88,9 +86,7 @@ export const initiateRazorpayCheckout = async ({
     },
     modal: {
       ondismiss: function () {
-        if (typeof document !== 'undefined') {
-          document.body.classList.remove('razorpayTestModeWrapper');
-        }
+        cleanupCornerCleaner();
         if (onDismiss) onDismiss();
       },
       escape: true,
@@ -101,9 +97,7 @@ export const initiateRazorpayCheckout = async ({
   try {
     const rzp = new window.Razorpay(options);
     rzp.on('payment.failed', function (response) {
-      if (typeof document !== 'undefined') {
-        document.body.classList.remove('razorpayTestModeWrapper');
-      }
+      cleanupCornerCleaner();
       if (onError) {
         onError({
           code: response.error?.code,
@@ -115,16 +109,57 @@ export const initiateRazorpayCheckout = async ({
       }
     });
 
-    // TEMPORARY: Apply isolated styling wrapper to parent body during Test Mode checkout
-    if (typeof document !== 'undefined') {
-      document.body.classList.add('razorpayTestModeWrapper');
-    }
+    // TEMPORARY: Clean up presentation framing and corner area during Test Mode checkout
+    applyCornerCleaner();
 
     rzp.open();
   } catch (err) {
-    if (typeof document !== 'undefined') {
-      document.body.classList.remove('razorpayTestModeWrapper');
-    }
+    cleanupCornerCleaner();
     if (onError) onError(err);
+  }
+};
+
+const CORNER_CLEANER_ID = 'razorpay-corner-cleaner';
+
+const applyCornerCleaner = () => {
+  if (typeof document === 'undefined') return;
+  document.body.classList.add('razorpayTestModeWrapper');
+
+  const ensureCover = () => {
+    let cover = document.getElementById(CORNER_CLEANER_ID);
+    if (!cover) {
+      cover = document.createElement('div');
+      cover.id = CORNER_CLEANER_ID;
+      cover.setAttribute('aria-hidden', 'true');
+      cover.style.cssText = [
+        'position: fixed !important',
+        'top: 0 !important',
+        'right: 0 !important',
+        'width: 220px !important',
+        'height: 220px !important',
+        'z-index: 2147483647 !important',
+        'background: #000000 !important',
+        'clip-path: polygon(100% 0, 0 0, 100% 100%) !important',
+        'pointer-events: none !important',
+        'transition: opacity 0.2s ease !important'
+      ].join(';');
+      document.body.appendChild(cover);
+    } else {
+      document.body.appendChild(cover);
+    }
+  };
+
+  ensureCover();
+  setTimeout(ensureCover, 150);
+  setTimeout(ensureCover, 500);
+  setTimeout(ensureCover, 1200);
+};
+
+const cleanupCornerCleaner = () => {
+  if (typeof document === 'undefined') return;
+  document.body.classList.remove('razorpayTestModeWrapper');
+  const cover = document.getElementById(CORNER_CLEANER_ID);
+  if (cover) {
+    cover.remove();
   }
 };
