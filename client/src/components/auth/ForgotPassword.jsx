@@ -28,25 +28,30 @@ const ForgotPassword = () => {
 
     setLoading(true);
 
-    // 1. Try Firebase Auth sendPasswordResetEmail
     try {
+      // 1. Try Firebase Auth sendPasswordResetEmail
       if (auth) {
-        await sendPasswordResetEmail(auth, cleanEmail);
+        try {
+          await sendPasswordResetEmail(auth, cleanEmail);
+        } catch (firebaseErr) {
+          console.warn('[Firebase sendPasswordResetEmail Warning]:', firebaseErr.code, firebaseErr.message);
+        }
       }
-    } catch (firebaseErr) {
-      console.warn('[Firebase sendPasswordResetEmail Warning]:', firebaseErr.code, firebaseErr.message);
-    }
 
-    // 2. Also call backend API POST /auth/forgot-password (Nodemailer dispatch)
-    try {
-      await axiosInstance.post('/auth/forgot-password', { email: cleanEmail });
-    } catch (backendErr) {
-      console.warn('[Backend forgot-password API Warning]:', backendErr.message);
-    }
+      // 2. Also call backend API POST /auth/forgot-password (Nodemailer dispatch)
+      try {
+        await axiosInstance.post('/auth/forgot-password', { email: cleanEmail });
+      } catch (backendErr) {
+        console.warn('[Backend forgot-password API Warning]:', backendErr.message);
+      }
 
-    setSubmitted(true);
-    toast.success('Password reset email sent! Please check your inbox.');
-    setLoading(false);
+      setSubmitted(true);
+      toast.success('Password reset email sent! Please check your inbox.');
+    } catch (err) {
+      toast.error(err.message || 'Failed to send reset link.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -95,16 +100,18 @@ const ForgotPassword = () => {
               if (error) setError('');
             }}
             error={error}
+            disabled={loading}
             required
           />
 
           <Button
             type="submit"
             isLoading={loading}
+            disabled={loading || !email.trim()}
             fullWidth
             size="lg"
           >
-            Send Reset Link
+            {loading ? 'Sending Link…' : 'Send Reset Link'}
           </Button>
 
           <div className="pt-2 text-center">

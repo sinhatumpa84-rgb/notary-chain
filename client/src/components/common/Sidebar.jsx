@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import {
   LayoutDashboard, CreditCard, ShieldCheck, FileText,
   History, BarChart3, Wallet, Settings, ChevronLeft,
@@ -32,10 +33,20 @@ const GROUP_LABELS = {
 const Sidebar = ({ collapsed, onToggle, isMobileDrawer = false }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/');
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+      navigate('/');
+    } catch {
+      navigate('/');
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   const groups = [...new Set(NAV_ITEMS.map((i) => i.group))];
@@ -195,13 +206,14 @@ const Sidebar = ({ collapsed, onToggle, isMobileDrawer = false }) => {
         {/* Logout */}
         <button
           onClick={handleLogout}
+          disabled={loggingOut}
           title={collapsed && !isMobileDrawer ? 'Log out' : undefined}
-          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#7B746E] hover:bg-[#FEF2F2] hover:text-[#DC2626] transition-all group ${
+          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#7B746E] hover:bg-[#FEF2F2] hover:text-[#DC2626] transition-all group disabled:opacity-50 disabled:cursor-not-allowed ${
             collapsed && !isMobileDrawer ? 'justify-center' : ''
           }`}
         >
           <LogOut className="w-4 h-4 shrink-0 group-hover:text-[#DC2626] transition-colors" strokeWidth={2} />
-          {(!collapsed || isMobileDrawer) && <span>Log out</span>}
+          {(!collapsed || isMobileDrawer) && <span>{loggingOut ? 'Logging out…' : 'Log out'}</span>}
         </button>
       </div>
     </motion.aside>

@@ -7,16 +7,27 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import NotificationBell from '../notifications/NotificationBell';
+import toast from 'react-hot-toast';
 
 const DesktopTopNav = () => {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/');
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+      navigate('/');
+    } catch {
+      navigate('/');
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   const centerLinks = [
@@ -119,8 +130,9 @@ const DesktopTopNav = () => {
           {/* Logout Button */}
           <button
             onClick={handleLogout}
+            disabled={loggingOut}
             title="Log Out to Landing Page"
-            className="p-2 text-[#7B746E] hover:text-[#DC2626] hover:bg-[#FEF2F2] rounded-xl border border-[#E8E2DA] transition-all"
+            className="p-2 text-[#7B746E] hover:text-[#DC2626] hover:bg-[#FEF2F2] rounded-xl border border-[#E8E2DA] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <LogOut className="w-4 h-4" />
           </button>

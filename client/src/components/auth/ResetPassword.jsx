@@ -40,26 +40,31 @@ const ResetPassword = () => {
 
     setLoading(true);
 
-    if (auth && oobCode) {
-      try {
-        await confirmPasswordReset(auth, oobCode, password);
-      } catch (err) {
-        console.warn('[Firebase confirmPasswordReset Warning]:', err.code, err.message);
+    try {
+      if (auth && oobCode) {
+        try {
+          await confirmPasswordReset(auth, oobCode, password);
+        } catch (err) {
+          console.warn('[Firebase confirmPasswordReset Warning]:', err.code, err.message);
+        }
       }
-    }
 
-    if (token && token !== 'undefined') {
-      try {
-        await axiosInstance.post(`/auth/reset-password/${token}`, { password });
-      } catch (backendErr) {
-        console.warn('[Backend reset-password API Warning]:', backendErr.message);
+      if (token && token !== 'undefined') {
+        try {
+          await axiosInstance.post(`/auth/reset-password/${token}`, { password });
+        } catch (backendErr) {
+          console.warn('[Backend reset-password API Warning]:', backendErr.message);
+        }
       }
-    }
 
-    setCompleted(true);
-    toast.success('Password updated successfully! Please sign in with your new password.');
-    setTimeout(() => navigate('/login'), 1800);
-    setLoading(false);
+      setCompleted(true);
+      toast.success('Password updated successfully! Please sign in with your new password.');
+      setTimeout(() => navigate('/login'), 1800);
+    } catch (err) {
+      toast.error(err.message || 'Failed to update password.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -102,6 +107,7 @@ const ResetPassword = () => {
             placeholder="••••••••"
             value={password}
             onChange={(e) => { setPassword(e.target.value); if (error) setError(''); }}
+            disabled={loading}
             required
           />
 
@@ -113,16 +119,18 @@ const ResetPassword = () => {
             value={confirmPassword}
             onChange={(e) => { setConfirmPassword(e.target.value); if (error) setError(''); }}
             error={error}
+            disabled={loading}
             required
           />
 
           <Button
             type="submit"
             isLoading={loading}
+            disabled={loading || !password || !confirmPassword}
             fullWidth
             size="lg"
           >
-            Update Password
+            {loading ? 'Updating Password…' : 'Update Password'}
           </Button>
 
           <div className="pt-2 text-center">

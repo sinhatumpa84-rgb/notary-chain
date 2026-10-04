@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Menu, Search, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import NotificationBell from '../notifications/NotificationBell';
 import Web3WalletBadge from './Web3WalletBadge';
@@ -8,10 +9,20 @@ import Web3WalletBadge from './Web3WalletBadge';
 const Header = ({ onMenuToggle }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/');
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+      navigate('/');
+    } catch {
+      navigate('/');
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   return (
@@ -59,8 +70,9 @@ const Header = ({ onMenuToggle }) => {
 
         <button
           onClick={handleLogout}
+          disabled={loggingOut}
           title="Log Out to Landing Page"
-          className="p-2 text-[#7B746E] hover:text-[#DC2626] hover:bg-[#FEF2F2] rounded-xl border border-[#E8E2DA] transition-all"
+          className="p-2 text-[#7B746E] hover:text-[#DC2626] hover:bg-[#FEF2F2] rounded-xl border border-[#E8E2DA] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <LogOut className="w-4 h-4" />
         </button>

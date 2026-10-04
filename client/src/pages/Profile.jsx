@@ -57,13 +57,18 @@ const Profile = () => {
     }
   }, [user]);
 
+  const [logoutLoading, setLogoutLoading] = useState(false);
   const handleLogout = async () => {
+    if (logoutLoading) return;
+    setLogoutLoading(true);
     try {
       await logout();
       toast.success('Logged out successfully');
-      navigate('/login');
+      navigate('/');
     } catch (err) {
       toast.error('Logout failed');
+    } finally {
+      setLogoutLoading(false);
     }
   };
 
@@ -419,9 +424,10 @@ const Profile = () => {
             </div>
             <button
               onClick={handleLogout}
-              className="w-full sm:w-auto px-5 py-2.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 shadow-xs"
+              disabled={logoutLoading}
+              className="w-full sm:w-auto px-5 py-2.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <HiOutlineArrowRightOnRectangle size={18}/> Log Out
+              <HiOutlineArrowRightOnRectangle size={18}/> {logoutLoading ? 'Logging Out…' : 'Log Out'}
             </button>
           </div>
 

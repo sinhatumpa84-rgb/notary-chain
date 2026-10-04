@@ -5,6 +5,7 @@ import { Mail, Lock, User, Building, ShieldCheck, FileCheck } from 'lucide-react
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { isEmailRegisteredLocally } from '../../context/AuthContext';
+import axiosInstance from '../../api/axios';
 import Button from '../common/Button';
 import Input from '../common/Input';
 
@@ -28,8 +29,19 @@ const SignupForm = () => {
   const [emailCheckLoading, setEmailCheckLoading] = useState(false);
   const [existingEmailError, setExistingEmailError] = useState('');
 
+  const isSubmitting = loading || googleLoading || emailCheckLoading;
+
   const handleNext = async () => {
+    if (isSubmitting) return;
     if (step === 1) {
+      if (formData.password.length < 8) {
+        toast.error('Password must be at least 8 characters with letters and numbers.');
+        return;
+      }
+      if (formData.password !== formData.confirm) {
+        toast.error('Passwords do not match.');
+        return;
+      }
       if (isEmailRegisteredLocally(formData.email)) {
         setExistingEmailError('An account with this email already exists. Please log in instead.');
         toast.error('An account with this email already exists. Please log in instead.');
@@ -85,6 +97,7 @@ const SignupForm = () => {
   };
 
   const handleGoogleSignup = async () => {
+    if (isSubmitting) return;
     setGoogleLoading(true);
     try {
       const res = await loginWithGoogle('register');
@@ -95,6 +108,9 @@ const SignupForm = () => {
       toast.success('Google account created! Please complete 2-Step Face ID or Passkey registration.');
       navigate('/verify-identity');
     } catch (err) {
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        return;
+      }
       const msg = err.message || 'Google sign-up failed.';
       if (msg.includes('already exists') || msg.includes('Already signed in') || msg.includes('email-already-in-use') || msg.includes('Please sign in') || msg.includes('Please log in')) {
         toast.error('An account with this email already exists. Please log in instead.');
@@ -140,7 +156,7 @@ const SignupForm = () => {
             type="button"
             id="google-signup-btn"
             onClick={handleGoogleSignup}
-            disabled={googleLoading}
+            disabled={isSubmitting}
             className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-white hover:bg-[#F6F3EE] border border-[#E8E2DA] text-[#2E2A26] font-medium text-sm transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {googleLoading ? (
@@ -172,6 +188,7 @@ const SignupForm = () => {
                   setFormData({...formData, email: e.target.value});
                   if (existingEmailError) setExistingEmailError('');
                 }}
+                disabled={isSubmitting}
                 required
               />
 
@@ -182,7 +199,7 @@ const SignupForm = () => {
                 </div>
               )}
 
-              <Input label="Password" icon={<Lock className="w-4 h-4" />} type="password" placeholder="••••••••" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required />
+              <Input label="Password" icon={<Lock className="w-4 h-4" />} type="password" placeholder="••••••••" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} disabled={isSubmitting} required />
               
               <div className="flex gap-1 h-1.5 mt-2">
                 {[1,2,3,4].map(i => (
@@ -191,8 +208,8 @@ const SignupForm = () => {
               </div>
               <p className="text-[11px] text-[#7B746E]">Min 8 characters with letters and numbers</p>
               
-              <Input label="Confirm Password" icon={<Lock className="w-4 h-4" />} type="password" placeholder="••••••••" value={formData.confirm} onChange={e => setFormData({...formData, confirm: e.target.value})} required />
-              <Button type="submit" fullWidth size="lg" className="mt-4" isLoading={emailCheckLoading} disabled={!formData.email.trim() || !formData.password.trim() || !formData.confirm.trim() || emailCheckLoading}>
+              <Input label="Confirm Password" icon={<Lock className="w-4 h-4" />} type="password" placeholder="••••••••" value={formData.confirm} onChange={e => setFormData({...formData, confirm: e.target.value})} disabled={isSubmitting} required />
+              <Button type="submit" fullWidth size="lg" className="mt-4" isLoading={emailCheckLoading} disabled={!formData.email.trim() || !formData.password.trim() || !formData.confirm.trim() || isSubmitting}>
                 {emailCheckLoading ? 'Checking Account…' : 'Next Step'}
               </Button>
             </motion.div>
@@ -200,8 +217,8 @@ const SignupForm = () => {
 
           {step === 2 && (
             <motion.div key="step2" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-4">
-              <Input label="First Name" icon={<User className="w-4 h-4" />} type="text" placeholder="John" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} required />
-              <Input label="Last Name" icon={<User className="w-4 h-4" />} type="text" placeholder="Doe" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} required />
+              <Input label="First Name" icon={<User className="w-4 h-4" />} type="text" placeholder="John" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} disabled={isSubmitting} required />
+              <Input label="Last Name" icon={<User className="w-4 h-4" />} type="text" placeholder="Doe" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} disabled={isSubmitting} required />
               
               <div>
                 <label className="block text-xs font-semibold text-[#2E2A26] mb-1.5 uppercase tracking-wider">Mobile Phone</label>
@@ -215,14 +232,15 @@ const SignupForm = () => {
                     value={formData.phone}
                     onChange={e => setFormData({...formData, phone: e.target.value.replace(/\D/g,'').slice(0,10)})}
                     maxLength={10}
-                    className="w-full pl-12 pr-3.5 py-2.5 bg-white border border-[#E8E2DA] text-[#2E2A26] rounded-xl text-sm focus:outline-none focus:border-[#2D6A4F] focus:ring-2 focus:ring-[#2D6A4F]/15 transition-all"
+                    disabled={isSubmitting}
+                    className="w-full pl-12 pr-3.5 py-2.5 bg-white border border-[#E8E2DA] text-[#2E2A26] rounded-xl text-sm focus:outline-none focus:border-[#2D6A4F] focus:ring-2 focus:ring-[#2D6A4F]/15 transition-all disabled:opacity-60"
                   />
                 </div>
               </div>
 
               <div className="flex gap-3 mt-4">
-                <Button type="button" variant="secondary" onClick={handleBack} className="w-1/3">Back</Button>
-                <Button type="submit" className="w-2/3" disabled={!formData.firstName.trim() || !formData.lastName.trim()}>Next Step</Button>
+                <Button type="button" variant="secondary" onClick={handleBack} disabled={isSubmitting} className="w-1/3">Back</Button>
+                <Button type="submit" className="w-2/3" disabled={!formData.firstName.trim() || !formData.lastName.trim() || isSubmitting}>Next Step</Button>
               </div>
             </motion.div>
           )}
@@ -238,8 +256,8 @@ const SignupForm = () => {
                 ].map(role => (
                   <div
                     key={role.id}
-                    onClick={() => setFormData({...formData, role: role.id})}
-                    className={`p-3.5 rounded-xl cursor-pointer border transition-all flex items-center gap-3.5 ${formData.role === role.id ? 'border-[#2D6A4F] bg-[#F0FAF5]' : 'border-[#E8E2DA] bg-white hover:bg-[#F6F3EE]'}`}
+                    onClick={() => { if (!isSubmitting) setFormData({...formData, role: role.id}); }}
+                    className={`p-3.5 rounded-xl border transition-all flex items-center gap-3.5 ${isSubmitting ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'} ${formData.role === role.id ? 'border-[#2D6A4F] bg-[#F0FAF5]' : 'border-[#E8E2DA] bg-white hover:bg-[#F6F3EE]'}`}
                   > 
                     <div className={`p-2.5 rounded-lg shrink-0 ${formData.role === role.id ? 'bg-[#2D6A4F] text-white' : 'bg-[#F6F3EE] text-[#7B746E]'}`}>
                       <role.icon className="w-5 h-5" />
@@ -253,8 +271,10 @@ const SignupForm = () => {
               </div>
 
               <div className="flex gap-3 mt-4">
-                <Button type="button" variant="secondary" onClick={handleBack} className="w-1/3">Back</Button>
-                <Button type="submit" isLoading={loading} className="w-2/3">Complete Signup</Button>
+                <Button type="button" variant="secondary" onClick={handleBack} disabled={isSubmitting} className="w-1/3">Back</Button>
+                <Button type="submit" isLoading={loading} disabled={isSubmitting} className="w-2/3">
+                  {loading ? 'Creating Account…' : 'Complete Signup'}
+                </Button>
               </div>
             </motion.div>
           )}

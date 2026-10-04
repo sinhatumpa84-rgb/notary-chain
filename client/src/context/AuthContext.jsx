@@ -53,11 +53,34 @@ export const isEmailRegisteredLocally = (email) => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser]       = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [needsVerification, setNeedsVerification] = useState(
-    () => localStorage.getItem('face_verified') !== 'true'
-  );
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('user_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [isLoading, setIsLoading] = useState(() => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const saved = localStorage.getItem('user_session');
+      if (saved) return false;
+      if (token && token !== 'demo-token') return true;
+      return false;
+    } catch {
+      return false;
+    }
+  });
+
+  const [needsVerification, setNeedsVerification] = useState(() => {
+    try {
+      return localStorage.getItem('face_verified') !== 'true';
+    } catch {
+      return true;
+    }
+  });
 
   const isAuthenticated = !!user;
 
@@ -182,18 +205,18 @@ export const AuthProvider = ({ children }) => {
           if (payload) {
             setUser(payload);
             localStorage.setItem('user_session', JSON.stringify(payload));
-          } else {
+          }
+        } catch (err) {
+          if (err?.response?.status === 401) {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user_session');
             setUser(null);
           }
-        } catch {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('user_session');
-          setUser(null);
         }
       } else if (token === 'demo-token' && savedSession) {
         try { setUser(JSON.parse(savedSession)); } catch (e) { setUser(null); }
-      } else {
+      } else if (!savedSession) {
         setUser(null);
       }
       setIsLoading(false);
@@ -342,11 +365,19 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(async () => {
-    if (IS_CONFIGURED && auth) {
-      try { await signOut(auth); } catch (e) {}
-    }
-    localStorage.clear();
-    sessionStorage.clear();
+    try {
+      if (IS_CONFIGURED && auth) {
+        signOut(auth).catch((e) => console.warn('[Auth Logout]', e));
+      }
+    } catch (e) {}
+    try {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user_session');
+      localStorage.removeItem('face_verified');
+      localStorage.removeItem('web3_connected_wallet');
+      sessionStorage.removeItem('pending_google_auth');
+    } catch (e) {}
     setUser(null);
     setNeedsVerification(false);
   }, []);

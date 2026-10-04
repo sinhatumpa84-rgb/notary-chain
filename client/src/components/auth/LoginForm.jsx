@@ -26,8 +26,11 @@ const LoginForm = () => {
   const { login, loginWithGoogle, updateUser } = useAuth();
   const navigate = useNavigate();
 
+  const isAnyLoading = loading || googleLoading || walletLoading;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isAnyLoading) return;
     setLoading(true);
     try {
       const res = await login(email, password);
@@ -43,7 +46,7 @@ const LoginForm = () => {
       if (msg.includes('No account found') || msg.includes('user-not-found') || msg.includes('create an account first')) {
         toast.error('No account found with this email. Please create an account first.');
       } else if (msg.includes('password') || msg.includes('credentials') || msg.includes('Unauthorized')) {
-        toast.error('wrong password');
+        toast.error('Incorrect password. Please try again.');
       } else {
         toast.error(msg);
       }
@@ -53,6 +56,7 @@ const LoginForm = () => {
   };
 
   const handleGoogleLogin = async () => {
+    if (isAnyLoading) return;
     setGoogleLoading(true);
     try {
       const res = await loginWithGoogle('login');
@@ -63,6 +67,9 @@ const LoginForm = () => {
       toast.success('Google account authenticated! Please complete 2-Step Face ID or Passkey verification.');
       navigate('/verify-identity');
     } catch (err) {
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        return;
+      }
       const msg = err.message || 'Google sign-in failed.';
       if (msg.includes('No account found') || msg.includes('user-not-found') || msg.includes('create an account first') || msg.includes('Please sign up')) {
         toast.error('No account found with this Google account. Please create an account first.');
@@ -75,6 +82,7 @@ const LoginForm = () => {
   };
 
   const handleWalletLogin = async () => {
+    if (isAnyLoading) return;
     setWalletLoading(true);
     try {
       if (!window.ethereum) {
@@ -128,7 +136,7 @@ const LoginForm = () => {
       navigate('/verify-identity');
     } catch (err) {
       if (err?.code === 4001 || err?.message?.toLowerCase().includes('reject') || err?.message?.toLowerCase().includes('cancel')) {
-        toast.error('Wallet connection request was cancelled');
+        toast('Wallet connection request was cancelled', { icon: 'ℹ️' });
       } else {
         toast.error(err?.message || 'Wallet connection failed');
       }
@@ -158,7 +166,7 @@ const LoginForm = () => {
           type="button"
           id="google-signin-btn"
           onClick={handleGoogleLogin}
-          disabled={googleLoading}
+          disabled={isAnyLoading}
           className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl bg-white hover:bg-[#F6F3EE] border border-[#E8E2DA] text-[#2E2A26] font-semibold text-xs transition-all shadow-xs disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {googleLoading ? (
@@ -175,7 +183,7 @@ const LoginForm = () => {
           type="button"
           id="wallet-signin-btn"
           onClick={handleWalletLogin}
-          disabled={walletLoading}
+          disabled={isAnyLoading}
           className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl bg-[#F0FAF5] hover:bg-[#D9F2E6] border border-[#B3E4CC] text-[#2D6A4F] font-semibold text-xs transition-all shadow-xs disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <Wallet className="w-4 h-4" />
@@ -202,6 +210,7 @@ const LoginForm = () => {
           placeholder="name@company.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          disabled={isAnyLoading}
           required
         />
 
@@ -212,12 +221,13 @@ const LoginForm = () => {
           placeholder="••••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          disabled={isAnyLoading}
           required
         />
 
         <div className="flex items-center justify-between text-xs pt-1">
           <label className="flex items-center text-[#55504B] cursor-pointer font-medium">
-            <input type="checkbox" className="mr-2 rounded border-[#E8E2DA] text-[#2D6A4F] focus:ring-[#2D6A4F]" />
+            <input type="checkbox" disabled={isAnyLoading} className="mr-2 rounded border-[#E8E2DA] text-[#2D6A4F] focus:ring-[#2D6A4F]" />
             Remember me
           </label>
           <Link to="/forgot-password" className="text-[#2D6A4F] hover:underline font-semibold">Forgot password?</Link>
@@ -226,11 +236,11 @@ const LoginForm = () => {
         <Button
           type="submit"
           isLoading={loading}
-          disabled={!email.trim() || !password.trim() || loading}
+          disabled={!email.trim() || !password.trim() || isAnyLoading}
           fullWidth
           size="lg"
         >
-          Sign In
+          {loading ? 'Signing In…' : 'Sign In'}
         </Button>
       </form>
 

@@ -47,8 +47,9 @@ const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, needsVerification, isLoading } = useAuth();
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAF8F4]">
-        <div className="animate-spin rounded-full h-10 w-10 border-3 border-[#2D6A4F] border-t-transparent" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAF8F4] transition-opacity duration-200">
+        <div className="animate-spin rounded-full h-9 w-9 border-2 border-[#2D6A4F] border-t-transparent shadow-xs" />
+        <p className="text-xs text-[#7B746E] mt-3 font-medium">Securing session…</p>
       </div>
     );
   }
@@ -66,8 +67,9 @@ const AuthGuard = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAF8F4]">
-        <div className="animate-spin rounded-full h-10 w-10 border-3 border-[#2D6A4F] border-t-transparent" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAF8F4] transition-opacity duration-200">
+        <div className="animate-spin rounded-full h-9 w-9 border-2 border-[#2D6A4F] border-t-transparent shadow-xs" />
+        <p className="text-xs text-[#7B746E] mt-3 font-medium">Securing session…</p>
       </div>
     );
   }
@@ -77,6 +79,17 @@ const AuthGuard = ({ children }) => {
   }
 
   return <Navigate to="/login" replace />;
+};
+
+/**
+ * PublicAuthRoute — Redirects already authenticated & verified users to /dashboard.
+ */
+const PublicAuthRoute = ({ children }) => {
+  const { isAuthenticated, needsVerification, isLoading } = useAuth();
+  if (!isLoading && isAuthenticated && !needsVerification) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
 };
 
 /**
@@ -109,8 +122,8 @@ function App() {
 
               {/* 2. AUTHENTICATION PAGES (Sign In & Create Account Forms) */}
               <Route element={<AuthLayout />}>
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
+                <Route path="/login" element={<PublicAuthRoute><Login /></PublicAuthRoute>} />
+                <Route path="/signup" element={<PublicAuthRoute><Signup /></PublicAuthRoute>} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
                 <Route path="/verify-email/:token" element={<VerifyEmail />} />

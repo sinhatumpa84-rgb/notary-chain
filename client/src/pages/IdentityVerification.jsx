@@ -32,6 +32,7 @@ const IdentityVerification = () => {
   // Password / Passkey States
   const [passkey, setPasskey] = useState('');
   const [passwordVerifying, setPasswordVerifying] = useState(false);
+  const [continuing, setContinuing] = useState(false);
 
   // Camera & Face Verification Refs
   const videoRef = useRef(null);
@@ -102,7 +103,7 @@ const IdentityVerification = () => {
     }
 
     if (!parsedUser) {
-      toast.error('I think you do not have an account, so first create an account.');
+      toast.error('No active verification session found. Please create an account or sign in.');
       setTimeout(() => navigate('/signup'), 1500);
     }
   }, [user]);
@@ -498,12 +499,12 @@ const IdentityVerification = () => {
 
       setTimeout(() => navigate('/dashboard'), 800);
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'wrong password';
+      const msg = err.response?.data?.message || err.message || '';
       const popupMsg = (msg.toLowerCase().includes('wrong password') || msg.toLowerCase().includes('invalid'))
-        ? 'wrong password'
+        ? 'Incorrect passkey or password. Please try again.'
         : (msg.includes('No registered account') || msg.includes('create an account first')
-          ? 'I think you should not have any account, so first create an account.'
-          : msg);
+          ? 'No registered account found with this email. Please create an account first.'
+          : msg || 'Verification failed. Please try again.');
       setVerificationError(popupMsg);
       toast.error(popupMsg);
     } finally {
@@ -574,6 +575,8 @@ const IdentityVerification = () => {
 
   // Final Continue Action to Dashboard
   const handleContinueToDashboard = () => {
+    if (continuing) return;
+    setContinuing(true);
     const finalWallet = onboardingWallet || localStorage.getItem('web3_connected_wallet') || '';
     if (finalWallet) {
       localStorage.setItem('web3_connected_wallet', finalWallet);
@@ -917,9 +920,11 @@ const IdentityVerification = () => {
                         size="lg"
                         id="continue-dashboard-btn"
                         onClick={handleContinueToDashboard}
+                        disabled={continuing}
+                        isLoading={continuing}
                         icon={ArrowRight}
                       >
-                        Complete Setup & Proceed to Dashboard
+                        {continuing ? 'Securing Session & Loading Dashboard…' : 'Complete Setup & Proceed to Dashboard'}
                       </Button>
                     </div>
                   ) : authState === 'FAILED' ? (
@@ -1006,9 +1011,11 @@ const IdentityVerification = () => {
                     fullWidth
                     size="lg"
                     onClick={handleContinueToDashboard}
+                    disabled={continuing}
+                    isLoading={continuing}
                     icon={ArrowRight}
                   >
-                    Continue to Dashboard
+                    {continuing ? 'Securing Session & Loading Dashboard…' : 'Continue to Dashboard'}
                   </Button>
                 ) : (
                   <Button

@@ -189,55 +189,61 @@ export default function UsageTracker() {
 
   return (
     <>
-      <div className="rounded-xl bg-white p-3.5 ring-1 ring-[#E8E2DA] shadow-xs font-sans flex flex-col gap-2.5">
-        <div className="flex items-center justify-between">
+      <div className="rounded-xl bg-white p-3 ring-1 ring-[#E8E2DA] shadow-xs font-sans flex flex-col gap-2">
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between gap-2">
+          {/* Status icon + Primary label */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <BarChart3 className="h-4 w-4 text-[#7B746E]" />
-            <span className="text-xs font-bold text-[#2E2A26] uppercase tracking-wide">
-              Free Plan
+            <BarChart3 className="w-3.5 h-3.5 text-[#7B746E] shrink-0" />
+            <span className="text-[11px] font-bold text-[#2E2A26] uppercase tracking-wider whitespace-nowrap">
+              FREE PLAN
             </span>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
+
+          {/* Secondary Action + Close Button */}
+          <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
               onClick={handleOpenModal}
-              className="text-[11px] font-bold text-[#2D6A4F] hover:text-[#1B4532] flex items-center gap-0.5 transition-colors cursor-pointer"
+              className="text-[10.5px] font-semibold text-[#2D6A4F] hover:text-[#1B4532] inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded transition-colors whitespace-nowrap cursor-pointer hover:underline"
             >
               <span>Upgrade to Pro</span>
-              <ArrowUpRight className="h-3 w-3" />
+              <ArrowUpRight className="w-3 h-3 shrink-0" />
             </button>
             <button
               type="button"
               onClick={handleDismiss}
               aria-label="Close"
               title="Close"
-              className="p-1 -mr-1 text-[#7B746E] hover:text-[#2E2A26] hover:bg-[#FAF8F4] active:bg-[#E8E2DA] rounded-md transition-colors cursor-pointer flex items-center justify-center"
+              className="w-8 h-8 -mr-1.5 -my-1 inline-flex items-center justify-center text-[#8C847B] hover:text-[#2E2A26] hover:bg-[#FAF8F4] active:bg-[#E8E2DA] rounded-lg transition-colors cursor-pointer shrink-0"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="w-3.5 h-3.5" strokeWidth={2} />
             </button>
           </div>
         </div>
 
-        <div>
-          <div className="flex justify-between items-end mb-1">
-            <span className="text-[11px] font-medium text-[#55504B]">
+        {/* ── Verification Usage & Progress ── */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between gap-1.5 text-[10.5px]">
+            <span className="font-medium text-[#6B655F] truncate">
               {isLimitReached ? `${limit} / ${limit} Limit Reached` : `${used} / ${limit} Free Verifications Used`}
             </span>
-            <span className={`text-[11px] font-bold ${isLimitReached ? 'text-[#DC2626]' : 'text-[#2D6A4F]'}`}>
+            <span className={`font-semibold shrink-0 whitespace-nowrap ${isLimitReached ? 'text-[#DC2626]' : 'text-[#2D6A4F]'}`}>
               {isLimitReached ? '0 left' : `${remainingCount} remaining`}
             </span>
           </div>
           
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#FAF8F4] ring-1 ring-inset ring-[#E8E2DA]">
             <div 
-              className={`h-full ${progressColor} transition-all duration-500`} 
+              className={`h-full ${progressColor} transition-all duration-500 rounded-full`} 
               style={{ width: `${Math.min((used / limit) * 100, 100)}%` }} 
             />
           </div>
         </div>
         
+        {/* ── Pricing / Reset Footer ── */}
         {isLimitReached ? (
-          <div className="pt-1.5 border-t border-[#E8E2DA]/60 space-y-1">
+          <div className="pt-2 border-t border-[#E8E2DA]/60 space-y-1">
             <div className="flex items-center justify-between text-[10px]">
               <span className="text-[#7B746E] font-medium leading-tight truncate mr-1" title={formatResetDateTime(resetDate)}>
                 {formatResetDateTime(resetDate)}
@@ -252,6 +258,7 @@ export default function UsageTracker() {
               </span>
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={() => resetQuota?.()}
                   className="text-[10px] font-semibold text-[#7B746E] hover:text-[#2E2A26] hover:underline cursor-pointer"
                   title="Reset verification count to 0"
@@ -259,6 +266,7 @@ export default function UsageTracker() {
                   Reset (0/3)
                 </button>
                 <button
+                  type="button"
                   onClick={handleOpenModal}
                   className="text-[10px] font-bold text-[#2D6A4F] hover:underline cursor-pointer"
                 >
@@ -268,7 +276,7 @@ export default function UsageTracker() {
             </div>
           </div>
         ) : (
-          <div className="pt-1.5 border-t border-[#E8E2DA]/60 flex justify-between items-center text-[10px] text-[#7B746E]">
+          <div className="pt-2 border-t border-[#E8E2DA]/60 flex justify-between items-center text-[10px] text-[#7B746E]">
             <span>₹499/mo for Pro</span>
           </div>
         )}
