@@ -9,6 +9,7 @@ import {
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import { useAuth } from '../../hooks/useAuth';
+import { usePlan } from '../../context/PlanContext';
 import { formatFileSize } from '../../utils/formatters';
 import Button from '../common/Button';
 import { saveDocumentHistory } from '../../utils/documentHistory';
@@ -23,6 +24,7 @@ const SEV = {
 
 const DocumentUpload = ({ isOpen, onClose, onSuccess }) => {
   const { user } = useAuth();
+  const { canVerify, openUpgradeModal, setShowUpgradeModal, incrementUsage } = usePlan();
 
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState('');
@@ -56,6 +58,12 @@ const DocumentUpload = ({ isOpen, onClose, onSuccess }) => {
 
   const handleUpload = async () => {
     if (!file) return toast.error('Please select a file first');
+
+    if (canVerify && !canVerify()) {
+      if (openUpgradeModal) openUpgradeModal();
+      else if (setShowUpgradeModal) setShowUpgradeModal(true);
+      return;
+    }
 
     setUploading(true);
     const toastId = toast.loading('Uploading & analyzing document…');
@@ -98,6 +106,7 @@ const DocumentUpload = ({ isOpen, onClose, onSuccess }) => {
       setActiveDocIndex(0);
 
       saveDocumentHistory(user, data, title, category);
+      incrementUsage?.();
 
       if (data.bundle_result?.document_mode === 'BUNDLE') {
         toast.success(`Bundle detected: ${data.bundle_result.total_documents} documents analyzed!`, { id: toastId });
@@ -111,6 +120,10 @@ const DocumentUpload = ({ isOpen, onClose, onSuccess }) => {
       if (typeof onSuccess === 'function') onSuccess(data.document);
     } catch (err) {
       toast.dismiss(toastId);
+      if (err.response?.data?.isLimitReached) {
+        if (openUpgradeModal) openUpgradeModal();
+        else if (setShowUpgradeModal) setShowUpgradeModal(true);
+      }
       const msg = err.response?.data?.message || 'Upload failed. Please try again.';
       toast.error(msg);
     } finally {

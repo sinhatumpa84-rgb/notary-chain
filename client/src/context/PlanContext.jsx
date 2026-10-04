@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { PLANS } from '../utils/planConfig';
 import { useAuth } from '../hooks/useAuth';
 import api from '../api/axios';
@@ -25,6 +25,16 @@ export function PlanProvider({ children }) {
     currentPeriodEnd: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
   });
   const [loading, setLoading] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [hasDismissedModal, setHasDismissedModal] = useState(() => {
+    try {
+      const uId = user?._id || user?.id || user?.email || 'guest';
+      return sessionStorage.getItem(`notarychain_limit_modal_dismissed_${uId}`) === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const shownForLimitRef = useRef(false);
 
   // Fetch authoritative quota from server for this specific user account
   const fetchQuota = useCallback(async () => {
@@ -126,6 +136,47 @@ export function PlanProvider({ children }) {
   const usagePercentage = isUnlimited ? 0 : Math.min((verificationsUsed / verificationsLimit) * 100, 100);
   const remainingCount = isUnlimited ? 'Unlimited' : Math.max(0, verificationsLimit - verificationsUsed);
 
+  // When user changes, reload their specific dismissed state
+  useEffect(() => {
+    try {
+      const uId = user?._id || user?.id || user?.email || 'guest';
+      const dismissed = sessionStorage.getItem(`notarychain_limit_modal_dismissed_${uId}`) === 'true';
+      setHasDismissedModal(dismissed);
+    } catch {
+      setHasDismissedModal(false);
+    }
+  }, [user]);
+
+  // Synchronize modal when free verification limit is reached
+  useEffect(() => {
+    if (isAtLimit) {
+      if (!hasDismissedModal && !shownForLimitRef.current) {
+        setShowUpgradeModal(true);
+        shownForLimitRef.current = true;
+      }
+    } else {
+      shownForLimitRef.current = false;
+      setHasDismissedModal(false);
+      try {
+        const uId = user?._id || user?.id || user?.email || 'guest';
+        sessionStorage.removeItem(`notarychain_limit_modal_dismissed_${uId}`);
+      } catch {}
+    }
+  }, [isAtLimit, hasDismissedModal, user]);
+
+  const openUpgradeModal = useCallback(() => {
+    setShowUpgradeModal(true);
+  }, []);
+
+  const dismissUpgradeModal = useCallback(() => {
+    setShowUpgradeModal(false);
+    setHasDismissedModal(true);
+    try {
+      const uId = user?._id || user?.id || user?.email || 'guest';
+      sessionStorage.setItem(`notarychain_limit_modal_dismissed_${uId}`, 'true');
+    } catch {}
+  }, [user]);
+
   const incrementUsage = useCallback(async () => {
     // Optimistic local update
     setQuotaData(prev => {
@@ -178,6 +229,13 @@ export function PlanProvider({ children }) {
   }, [user]);
 
   const resetQuota = useCallback(async () => {
+    shownForLimitRef.current = false;
+    setHasDismissedModal(false);
+    try {
+      const uId = user?._id || user?.id || user?.email || 'guest';
+      sessionStorage.removeItem(`notarychain_limit_modal_dismissed_${uId}`);
+    } catch {}
+
     try {
       const res = await api.post('/users/reset-quota');
       const data = res.data?.data || res.data;
@@ -221,7 +279,12 @@ export function PlanProvider({ children }) {
     upgradePlan,
     resetQuota,
     fetchQuota,
-    loading
+    loading,
+    showUpgradeModal,
+    setShowUpgradeModal,
+    openUpgradeModal,
+    dismissUpgradeModal,
+    hasDismissedModal
   };
 
   return (

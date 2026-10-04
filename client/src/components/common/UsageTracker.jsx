@@ -5,8 +5,44 @@ import { usePlan } from '../../context/PlanContext';
 import UpgradeModal from './UpgradeModal';
 
 export default function UsageTracker() {
-  const { currentPlan, currentPlanKey, verificationsUsed, verificationsLimit, remainingCount, isUnlimited, usagePercentage, resetDate, fetchQuota, resetQuota } = usePlan();
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const plan = usePlan();
+  const {
+    currentPlan,
+    currentPlanKey,
+    verificationsUsed,
+    verificationsLimit,
+    remainingCount,
+    isUnlimited,
+    usagePercentage,
+    resetDate,
+    fetchQuota,
+    resetQuota,
+    showUpgradeModal,
+    setShowUpgradeModal,
+    openUpgradeModal,
+    dismissUpgradeModal
+  } = plan;
+
+  const [localShowUpgradeModal, setLocalShowUpgradeModal] = useState(false);
+  const isModalOpen = showUpgradeModal !== undefined ? showUpgradeModal : localShowUpgradeModal;
+  const setModalOpen = setShowUpgradeModal || setLocalShowUpgradeModal;
+
+  const handleOpenModal = () => {
+    if (openUpgradeModal) {
+      openUpgradeModal();
+    } else {
+      setModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    if (dismissUpgradeModal) {
+      dismissUpgradeModal();
+    } else {
+      setModalOpen(false);
+    }
+  };
+
   const [now, setNow] = useState(Date.now());
 
   // Live real-time ticking timer (updates every second)
@@ -136,7 +172,7 @@ export default function UsageTracker() {
             </span>
           </div>
           <button
-            onClick={() => setShowUpgradeModal(true)}
+            onClick={handleOpenModal}
             className="text-[11px] font-bold text-[#2D6A4F] hover:text-[#1B4532] flex items-center gap-0.5 transition-colors cursor-pointer"
           >
             <span>Upgrade to Pro</span>
@@ -185,7 +221,7 @@ export default function UsageTracker() {
                   Reset (0/3)
                 </button>
                 <button
-                  onClick={() => setShowUpgradeModal(true)}
+                  onClick={handleOpenModal}
                   className="text-[10px] font-bold text-[#2D6A4F] hover:underline cursor-pointer"
                 >
                   Upgrade now
@@ -201,8 +237,8 @@ export default function UsageTracker() {
       </div>
 
       <UpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
       />
     </>
   );

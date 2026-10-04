@@ -24,6 +24,14 @@ export default function UpgradeModal({ isOpen, onClose }) {
     }
   };
 
+  const handleMaybeLater = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    if (typeof onClose === 'function') {
+      onClose();
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -99,7 +107,8 @@ export default function UpgradeModal({ isOpen, onClose }) {
                 <ArrowUpRight className="h-3.5 w-3.5" />
               </button>
               <button
-                onClick={onClose}
+                type="button"
+                onClick={handleMaybeLater}
                 className="inline-flex w-full items-center justify-center rounded-xl bg-white px-4 py-3 sm:py-2.5 text-xs font-semibold text-[#55504B] ring-1 ring-inset ring-[#E8E2DA] transition-colors hover:bg-[#FAF8F4] sm:w-auto cursor-pointer min-h-[44px]"
               >
                 Maybe Later

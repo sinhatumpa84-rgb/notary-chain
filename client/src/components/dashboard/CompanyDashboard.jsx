@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Upload, Plus, Search, FileText, ShieldCheck, Clock,
@@ -76,7 +76,8 @@ const SECTION_TABS = [
 
 const CompanyDashboard = () => {
   const { user } = useAuth();
-  const { currentPlan, verificationsUsed, verificationsLimit, isUnlimited, usagePercentage } = usePlan();
+  const navigate = useNavigate();
+  const { currentPlan, currentPlanKey, verificationsUsed, verificationsLimit, isUnlimited, usagePercentage, openUpgradeModal, setShowUpgradeModal } = usePlan();
   const [activeSection, setActiveSection] = useState('overview');
   const [isUploadOpen, setUploadOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -145,13 +146,21 @@ const CompanyDashboard = () => {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-start">
-          <Link
-            to="/pricing"
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#2D6A4F] text-white text-[12px] font-semibold hover:bg-[#1B4532] transition-colors shadow-xs"
+          <button
+            type="button"
+            onClick={() => {
+              if (currentPlanKey === 'FREE') {
+                if (openUpgradeModal) openUpgradeModal();
+                else if (setShowUpgradeModal) setShowUpgradeModal(true);
+              } else {
+                navigate('/pricing');
+              }
+            }}
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#2D6A4F] text-white text-[12px] font-semibold hover:bg-[#1B4532] transition-colors shadow-xs cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Manage Plan</span>
-          </Link>
+          </button>
           <button
             onClick={fetchDocs}
             className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[#E9E4DD] bg-white text-[12px] font-medium text-[#55504B] hover:bg-[#F6F3EE] hover:text-[#2D2A27] transition-colors cursor-pointer"
