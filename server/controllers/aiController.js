@@ -9,10 +9,54 @@ const aiModelRouter = require('../services/ai/aiModelRouter');
 const ragService = require('../services/ai/ragService');
 const toolGateway = require('../services/ai/toolGateway');
 
-// ─── Groq Configuration ──────────────────────────────────────────────────────
+// ─── AI Provider Configuration ───────────────────────────────────────────────
 const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GROQ_BASE_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODELS = ['openai/gpt-oss-120b', 'qwen/qwen3.6-27b', 'openai/gpt-oss-20b', 'groq/compound'];
+const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+
+async function callGemini(messages, temperature = 0.35, max_tokens = 1400, jsonFormat = false) {
+  if (!GEMINI_API_KEY) return null;
+
+  for (const model of GEMINI_MODELS) {
+    try {
+      const payload = {
+        contents: messages.map((message) => ({
+          role: message.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: message.content || '' }]
+        })),
+        generationConfig: {
+          temperature,
+          maxOutputTokens: max_tokens,
+          ...(jsonFormat ? { responseMimeType: 'application/json' } : {})
+        }
+      };
+
+      const res = await axios.post(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+        payload,
+        {
+          timeout: 15000,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      const content = res.data?.candidates?.[0]?.content?.parts
+        ?.map((part) => part.text)
+        .join('')
+        .trim();
+
+      if (content) {
+        return content;
+      }
+    } catch (e) {
+      logger.warn(`[Gemini] Model ${model} call warning:`, e.response?.data?.error?.message || e.message);
+    }
+  }
+
+  return null;
+}
 
 async function callGroq(messages, temperature = 0.35, max_tokens = 1400, jsonFormat = false) {
   if (GROQ_API_KEY) {
@@ -40,6 +84,11 @@ async function callGroq(messages, temperature = 0.35, max_tokens = 1400, jsonFor
         logger.warn(`[Groq] Model ${model} call warning:`, e.response?.data?.error?.message || e.message);
       }
     }
+  }
+
+  const geminiFallback = await callGemini(messages, temperature, max_tokens, jsonFormat);
+  if (geminiFallback) {
+    return geminiFallback;
   }
 
   // Fallback intelligent AI responder

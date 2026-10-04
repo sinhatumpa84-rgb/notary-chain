@@ -22,6 +22,7 @@ module.exports = {
   JWT_EXPIRE: env.JWT_EXPIRE || '7d',
   JWT_REFRESH_EXPIRE: env.JWT_REFRESH_EXPIRE || '30d',
   GROQ_API_KEY: env.GROQ_API_KEY || '',
+  GEMINI_API_KEY: env.GEMINI_API_KEY || '',
   XAI_API_KEY: env.XAI_API_KEY || '',
   SMTP: {
     host: env.SMTP_HOST,
