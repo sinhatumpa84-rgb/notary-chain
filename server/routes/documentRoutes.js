@@ -20,7 +20,14 @@ router.get('/', c.getAll);
 router.get('/:id', c.getById);
 router.put('/:id', c.update);
 router.delete('/:id', extractDeviceInfo, c.deleteDocument);
-router.post('/:id/version', c.uploadNewVersion);
+router.post('/:id/version', extractDeviceInfo, (req, res, next) => {
+  c.multerUpload(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ success: false, message: err.message });
+    }
+    next();
+  });
+}, c.uploadNewVersion);
 router.post('/:id/share', c.shareDocument);
 router.delete('/:id/share/:userId', c.removeShare);
 router.patch('/:id/status', extractDeviceInfo, c.updateStatus);

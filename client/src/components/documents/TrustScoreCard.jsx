@@ -191,7 +191,7 @@ export default function TrustScoreCard({ trustScore = 0, hash, status, hasBlockc
             {isAiLoading ? (
               <div className="flex items-center gap-2 text-xs text-[#55504B] py-2">
                 <Loader2 className="w-4 h-4 animate-spin text-[#2D6A4F]" />
-                <span>Consulting secondary AI advisory model (Gemma / Gemini / Rules)...</span>
+                <span>Consulting xAI Grok advisory model...</span>
               </div>
             ) : aiData ? (
               <>
@@ -199,7 +199,7 @@ export default function TrustScoreCard({ trustScore = 0, hash, status, hasBlockc
                 <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-[#E8E2DA]">
                   <div className="flex items-center gap-1.5">
                     <span className="inline-block w-2 h-2 rounded-full bg-[#2D6A4F]" />
-                    <span className="text-xs font-bold text-[#2E2A26]">Model: {aiData.model_used || 'Gemma 2 / NotaryChain Heuristic'}</span>
+                    <span className="text-xs font-bold text-[#2E2A26]">Model: {aiData.model_used || 'xAI Grok / Verification Engine'}</span>
                   </div>
                   <span className="text-[10px] font-semibold text-[#7B746E] bg-white border border-[#E8E2DA] px-2 py-0.5 rounded-full">
                     Advisory Only • Non-Binding

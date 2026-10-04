@@ -34,17 +34,54 @@ function sanitizeUntrustedText(text = '') {
 
 class AIModelRouter {
   constructor() {
-    this.gemmaApiKey = process.env.GEMMA_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
-    this.geminiApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
+    this.xaiApiKey = process.env.XAI_API_KEY || '';
+    this.groqApiKey = process.env.GROQ_API_KEY || '';
+    this.gemmaApiKey = process.env.GEMMA_API_KEY || process.env.GOOGLE_API_KEY || '';
     this.digitalOceanInferenceUrl = process.env.DIGITALOCEAN_INFERENCE_URL || '';
     this.digitalOceanInferenceKey = process.env.DIGITALOCEAN_INFERENCE_KEY || '';
-    this.groqApiKey = process.env.GROQ_API_KEY || '';
-    this.xaiApiKey = process.env.XAI_API_KEY || '';
-    this.geminiRequestQueue = Promise.resolve();
   }
 
   /**
-   * Primary Provider: Google Gemma (via Google Generative Language API)
+   * Primary Provider: xAI Grok (Official reasoning layer)
+   */
+  async callGrok(messages, temperature = 0.2, maxTokens = 1200) {
+    if (!this.xaiApiKey) return null;
+
+    const grokModels = ['grok-2-latest', 'grok-2-1212', 'grok-beta'];
+    for (const model of grokModels) {
+      try {
+        const res = await axios.post(
+          'https://api.x.ai/v1/chat/completions',
+          {
+            model,
+            messages,
+            temperature,
+            max_tokens: maxTokens,
+            response_format: { type: 'json_object' }
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${this.xaiApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 20000
+          }
+        );
+
+        const content = res.data?.choices?.[0]?.message?.content;
+        if (content) {
+          logger.info(`[AI Router] Successfully responded via xAI Grok (${model})`);
+          return { content, model: `xAI Grok (${model})` };
+        }
+      } catch (err) {
+        logger.warn(`[AI Router] Grok model ${model} warning:`, err.response?.data?.error?.message || err.message);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Tertiary Fallback: Google Gemma
    */
   async callGemma(messages, temperature = 0.2, maxTokens = 1200) {
     if (!this.gemmaApiKey) return null;
@@ -78,76 +115,6 @@ class AIModelRouter {
       }
     }
     return null;
-  }
-
-  /**
-   * Secondary Fallback: Google Gemini
-   */
-  async callGemini(messages, temperature = 0.2, maxTokens = 1200) {
-    if (!this.geminiApiKey) return null;
-
-    const queueOperation = async () => {
-      const geminiModels = ['gemini-3.8-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
-      for (const model of geminiModels) {
-        for (let attempt = 0; attempt < 5; attempt += 1) {
-          try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.geminiApiKey}`;
-            const promptText = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
-
-            const res = await axios.post(
-              url,
-              {
-                contents: [{ parts: [{ text: promptText }] }],
-                generationConfig: {
-                  temperature,
-                  maxOutputTokens: maxTokens
-                }
-              },
-              { timeout: 30000 }
-            );
-
-            const content = res.data?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
-            if (content) {
-              logger.info(`[AI Router] Successfully responded via Google Gemini (${model})`);
-              return { content, model: `Google Gemini (${model})` };
-            }
-
-            const finishReason = res.data?.candidates?.[0]?.finishReason;
-            if (finishReason === 'SAFETY' || finishReason === 'RECITATION' || finishReason === 'BLOCKLIST') {
-              logger.warn(`[AI Router] Gemini model ${model} response blocked by safety:`, finishReason);
-              return null;
-            }
-
-            return null;
-          } catch (err) {
-            const status = err.response?.status;
-            const isTransient = status === 429 || status === 503 || err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || (!status && err.message && /timeout|network|socket|ECONN/i.test(err.message));
-            if (isTransient && attempt < 4) {
-              const delayMs = 2000 * (attempt + 1);
-              logger.warn(`[AI Router] Transient Gemini error on model ${model} (${status || 'network'}), retrying in ${delayMs}ms`);
-              await new Promise((resolve) => setTimeout(resolve, delayMs));
-              continue;
-            }
-            logger.warn(`[AI Router] Gemini model ${model} warning:`, err.response?.data?.error?.message || err.message);
-            break;
-          }
-        }
-      }
-      return null;
-    };
-
-    const previous = this.geminiRequestQueue;
-    let release;
-    this.geminiRequestQueue = new Promise((resolve) => {
-      release = resolve;
-    });
-
-    try {
-      await previous;
-      return await queueOperation();
-    } finally {
-      release();
-    }
   }
 
   /**
@@ -348,22 +315,22 @@ Return a valid JSON object ONLY with exactly this structure:
       { role: 'user', content: userPrompt }
     ];
 
-    // Priority 1: Google Gemma
-    let result = await this.callGemma(messages);
+    // Priority 1: xAI Grok (Official reasoning layer)
+    let result = await this.callGrok(messages);
 
-    // Priority 2: Google Gemini (Fallback)
-    if (!result) {
-      result = await this.callGemini(messages);
-    }
-
-    // Priority 3: DigitalOcean GenAI Inference (Optional Cloud)
-    if (!result) {
-      result = await this.callDigitalOcean(messages);
-    }
-
-    // Priority 4: Groq / xAI Fallback
+    // Priority 2: Groq Open-Source Fallback
     if (!result) {
       result = await this.callGroqFallback(messages);
+    }
+
+    // Priority 3: Google Gemma
+    if (!result) {
+      result = await this.callGemma(messages);
+    }
+
+    // Priority 4: DigitalOcean GenAI Inference (Optional Cloud)
+    if (!result) {
+      result = await this.callDigitalOcean(messages);
     }
 
     if (result && result.content) {
@@ -412,11 +379,11 @@ ${ragContext}`;
       { role: 'user', content: sanitizeUntrustedText(message) }
     ];
 
-    // Gemma -> Gemini -> DigitalOcean -> Groq -> Default
-    let result = await this.callGemma(messages, 0.4, 700);
-    if (!result) result = await this.callGemini(messages, 0.4, 700);
-    if (!result) result = await this.callDigitalOcean(messages, 0.4, 700);
+    // Grok -> Groq -> Gemma -> DigitalOcean -> Default
+    let result = await this.callGrok(messages, 0.4, 700);
     if (!result) result = await this.callGroqFallback(messages, 0.4, 700);
+    if (!result) result = await this.callGemma(messages, 0.4, 700);
+    if (!result) result = await this.callDigitalOcean(messages, 0.4, 700);
 
     if (result && result.content) {
       return { reply: result.content, model: result.model };

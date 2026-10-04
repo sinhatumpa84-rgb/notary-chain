@@ -15,7 +15,7 @@ export const detectTampering = (documentId) => api.post('/ai/tamper-detect', { d
 export const classifyDocument = (documentId) => api.post('/ai/classify', { documentId });
 export const getDocumentReports = (documentId) => api.get(`/ai/reports/document/${documentId}`);
 
-// ─── Secondary Multi-Model AI Endpoints (Gemma, Gemini, DigitalOcean, RAG) ─
+// ─── Secondary Multi-Model AI Endpoints (xAI Grok, Gemma, DigitalOcean, RAG) ─
 export const explainVerification = (documentId, verifiedResults = {}) =>
   api.post('/ai/explain-verification', { documentId, verifiedResults });
 

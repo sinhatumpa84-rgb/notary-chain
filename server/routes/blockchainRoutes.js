@@ -60,6 +60,10 @@ router.get('/health', async (req, res, next) => {
   }
 });
 
+const mongoose = require('mongoose');
+const Document = require('../models/Document');
+const logger = require('../utils/logger');
+
 /**
  * POST /api/blockchain/store-hash
  * Body: { content?: string, hash?: string, docId: string }
@@ -77,7 +81,40 @@ router.post('/store-hash', protect, async (req, res, next) => {
       throw new ApiError.BadRequestError('Provide a valid 64-char hex SHA-256 hash or raw content');
 
     const result = await blockchain.storeDocumentHash(finalHash, docId);
-    resU.success(res, { hash: finalHash, ...result }, 'Hash stored on blockchain');
+
+    // Synchronize to MongoDB as single source of truth
+    let linkedDoc = null;
+    try {
+      const isObjectId = mongoose.Types.ObjectId.isValid(docId);
+      const query = isObjectId ? { _id: docId } : { $or: [{ fileHash: finalHash }, { hash: finalHash }] };
+      const doc = await Document.findOne(query);
+      if (doc) {
+        doc.blockchainRecord = {
+          txHash: result.txHash,
+          blockNumber: result.blockNumber,
+          anchoredAt: new Date(),
+          network: 'Polygon Amoy',
+          contractAddress: process.env.CONTRACT_ADDRESS || '',
+          explorerUrl: result.explorerUrl
+        };
+        doc.blockchainTxHash = result.txHash;
+
+        // Transition status if unverified and clean
+        if (doc.verificationStatus === 'UNVERIFIED' || !doc.verificationStatus) {
+          doc.verificationStatus = 'VERIFIED';
+          doc.verificationReasons = [
+            ...(doc.verificationReasons || []),
+            `Anchored on Polygon Amoy blockchain at block #${result.blockNumber} (tx: ${result.txHash})`
+          ];
+        }
+        await doc.save();
+        linkedDoc = doc;
+      }
+    } catch (dbErr) {
+      logger.warn('[Blockchain] Could not link blockchain record to Document in MongoDB:', dbErr.message);
+    }
+
+    resU.success(res, { hash: finalHash, ...result, document: linkedDoc }, 'Hash stored on blockchain and synced to MongoDB');
   } catch (err) {
     next(err);
   }
@@ -94,7 +131,15 @@ router.get('/verify/:hash', protect, async (req, res, next) => {
       throw new ApiError.BadRequestError('Provide a valid 64-char hex SHA-256 hash');
 
     const record = await blockchain.verifyDocumentHash(hash);
-    resU.success(res, record, record.exists ? 'Hash verified on blockchain' : 'Hash not found on blockchain');
+    const doc = await Document.findOne({ $or: [{ fileHash: hash }, { hash }] })
+      .select('title originalFileName verificationStatus verificationScore suspiciousIndicators extractedMetadata createdAt');
+
+    resU.success(res, {
+      ...record,
+      documentRecord: doc || null,
+      isAuthenticOnChain: Boolean(record.exists),
+      verificationStatus: record.exists ? (doc?.verificationStatus || 'VERIFIED') : (doc?.verificationStatus || 'UNVERIFIED')
+    }, record.exists ? 'Hash verified on blockchain' : 'Hash not found on blockchain');
   } catch (err) {
     next(err);
   }

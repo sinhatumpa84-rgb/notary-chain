@@ -1,13 +1,34 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FileText, MoreVertical, Search } from 'lucide-react';
+import { FileText, MoreVertical, Search, ExternalLink } from 'lucide-react';
 import Badge from '../common/Badge';
 import { useAuth } from '../../hooks/useAuth';
 import { getDocumentHistory } from '../../utils/documentHistory';
 import axiosInstance from '../../api/axios';
 
+const getStatusMeta = (statusStr = '') => {
+  const norm = String(statusStr).toUpperCase().replace(/\s+/g, '_');
+  switch (norm) {
+    case 'VERIFIED':
+      return { label: 'VERIFIED', variant: 'success' };
+    case 'SUSPICIOUS':
+      return { label: 'SUSPICIOUS', variant: 'warning' };
+    case 'REJECTED':
+      return { label: 'REJECTED', variant: 'danger' };
+    case 'ANALYSIS_FAILED':
+      return { label: 'ANALYSIS FAILED', variant: 'danger' };
+    case 'PENDING_REVIEW':
+      return { label: 'PENDING REVIEW', variant: 'warning' };
+    case 'UNVERIFIED':
+    default:
+      return { label: 'UNVERIFIED', variant: 'info' };
+  }
+};
+
 const DocumentList = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,53 +36,66 @@ const DocumentList = () => {
   const fetchUserDocs = async () => {
     setLoading(true);
     try {
-      // 1. Fetch real API uploaded documents for logged in user
+      // 1. Fetch real API uploaded documents for logged in user from MongoDB
       const res = await axiosInstance.get('/documents');
       const apiDocs = res.data?.data?.documents || res.data?.documents || [];
 
       // 2. Also check local tested document history for this specific user
       const localHistory = getDocumentHistory(user);
 
-      // Map API documents to standard format
-      const formattedApi = apiDocs.map(d => ({
-        id: d._id || d.id,
-        name: d.title || d.fileName || d.originalFileName || 'Untitled Document',
-        status: d.status ? d.status.replace('_', ' ') : 'Verified',
-        variant: d.status === 'rejected' ? 'danger' : (d.status === 'approved' || d.status === 'notarized' ? 'success' : 'warning'),
-        category: d.category || 'Contract',
-        date: d.createdAt ? new Date(d.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently',
-        size: d.fileSize ? `${(d.fileSize / 1024 / 1024).toFixed(1)} MB` : '1.2 MB'
-      }));
+      // Map API documents to standard format with real verification statuses
+      const formattedApi = apiDocs.map(d => {
+        const rawStatus = d.verificationStatus || d.status || 'UNVERIFIED';
+        const meta = getStatusMeta(rawStatus);
+        return {
+          id: d._id || d.id,
+          name: d.title || d.fileName || d.originalFileName || 'Untitled Document',
+          status: meta.label,
+          variant: meta.variant,
+          category: d.documentType || d.category || 'Contract',
+          date: d.createdAt ? new Date(d.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently',
+          size: d.fileSize ? `${(d.fileSize / 1024 / 1024).toFixed(1)} MB` : (d.extractedMetadata?.fileSize ? `${(d.extractedMetadata.fileSize / 1024 / 1024).toFixed(1)} MB` : '1.2 MB'),
+          hash: d.fileHash || d.hash
+        };
+      });
 
       // Combine local history and API docs uniquely
       const combined = [...formattedApi];
       localHistory.forEach(item => {
-        if (!combined.some(c => c.name === item.title)) {
+        if (!combined.some(c => c.name === item.title || (item.hash && c.hash === item.hash))) {
+          const rawStatus = item.verificationStatus || item.status || 'UNVERIFIED';
+          const meta = getStatusMeta(rawStatus);
           combined.push({
-            id: item.id,
+            id: item.documentId || item.id,
             name: item.title || 'Untitled Document',
-            status: item.status || 'Verified',
-            variant: item.trustScore >= 80 ? 'success' : (item.trustScore >= 50 ? 'warning' : 'danger'),
+            status: meta.label,
+            variant: meta.variant,
             category: item.category || 'Contract',
             date: item.scannedAt ? item.scannedAt.split('•')[0].trim() : 'Recently',
-            size: '1.5 MB'
+            size: item.technicalMetadata?.file_size ? `${(item.technicalMetadata.file_size / 1024 / 1024).toFixed(1)} MB` : '1.5 MB',
+            hash: item.hash
           });
         }
       });
 
       setDocs(combined);
     } catch (err) {
-      // Fall back to local user history only (never default sample docs)
+      // Fall back to local user history with real status mapping
       const localHistory = getDocumentHistory(user);
-      const fallback = localHistory.map(item => ({
-        id: item.id,
-        name: item.title || 'Untitled Document',
-        status: item.status || 'Verified',
-        variant: item.trustScore >= 80 ? 'success' : 'warning',
-        category: item.category || 'Contract',
-        date: item.scannedAt ? item.scannedAt.split('•')[0].trim() : 'Recently',
-        size: '1.5 MB'
-      }));
+      const fallback = localHistory.map(item => {
+        const rawStatus = item.verificationStatus || item.status || 'UNVERIFIED';
+        const meta = getStatusMeta(rawStatus);
+        return {
+          id: item.documentId || item.id,
+          name: item.title || 'Untitled Document',
+          status: meta.label,
+          variant: meta.variant,
+          category: item.category || 'Contract',
+          date: item.scannedAt ? item.scannedAt.split('•')[0].trim() : 'Recently',
+          size: '1.5 MB',
+          hash: item.hash
+        };
+      });
       setDocs(fallback);
     } finally {
       setLoading(false);
@@ -134,14 +168,15 @@ const DocumentList = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                     key={doc.id}
-                    className="hover:bg-[#F6F3EE]/60 transition-colors group cursor-pointer"
+                    onClick={() => navigate(`/documents/${doc.id}`)}
+                    className="hover:bg-[#F6F3EE]/80 transition-colors group cursor-pointer"
                   >
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-[#F0FAF5] text-[#2D6A4F] border border-[#B3E4CC] shrink-0">
+                        <div className="p-2 rounded-lg bg-[#F0FAF5] text-[#2D6A4F] border border-[#B3E4CC] shrink-0 group-hover:scale-105 transition-transform">
                           <FileText className="w-4 h-4" />
                         </div>
-                        <span className="text-sm font-semibold text-[#2E2A26] capitalize">{doc.name}</span>
+                        <span className="text-sm font-semibold text-[#2E2A26] capitalize group-hover:text-[#2D6A4F] transition-colors">{doc.name}</span>
                       </div>
                     </td>
                     <td className="p-4">
@@ -151,8 +186,15 @@ const DocumentList = () => {
                     <td className="p-4 text-xs text-[#7B746E]">{doc.date}</td>
                     <td className="p-4 text-xs text-[#7B746E]">{doc.size}</td>
                     <td className="p-4 text-right">
-                      <button className="p-1.5 text-[#7B746E] hover:text-[#2E2A26] hover:bg-[#E8E2DA]/50 rounded-lg transition-all">
-                        <MoreVertical className="w-4 h-4" />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/documents/${doc.id}`);
+                        }}
+                        title="View Full Audit & Verification Details"
+                        className="p-1.5 text-[#7B746E] hover:text-[#2D6A4F] hover:bg-[#E8E2DA]/50 rounded-lg transition-all"
+                      >
+                        <ExternalLink className="w-4 h-4" />
                       </button>
                     </td>
                   </motion.tr>

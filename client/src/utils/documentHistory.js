@@ -68,16 +68,34 @@ export const saveDocumentHistory = (user, uploadResult, formTitle = '', formCate
       hour12: true
     });
 
+    const realVerificationStatus = doc.verificationStatus || uploadResult.verificationStatus || uploadResult.verification?.verificationStatus || 'UNVERIFIED';
+    const realVerificationScore = typeof doc.verificationScore === 'number' 
+      ? doc.verificationScore 
+      : (typeof uploadResult.verificationScore === 'number'
+        ? uploadResult.verificationScore
+        : (typeof uploadResult.verification?.verificationScore === 'number'
+          ? uploadResult.verification.verificationScore
+          : (typeof trustScore === 'number' ? trustScore : (riskLevel === 'HIGH' ? 30 : (riskLevel === 'MEDIUM' ? 65 : 85)))));
+
     const newItem = {
       id: docHash || `hist_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      documentId: doc._id || doc.id || uploadResult.document?._id || null,
       title: docTitle,
       category: categoryName,
       scannedAt: formattedDate,
       timestamp: now.toISOString(),
-      trustScore: typeof trustScore === 'number' ? trustScore : (riskLevel === 'HIGH' ? 30 : (riskLevel === 'MEDIUM' ? 80 : 98)),
+      trustScore: realVerificationScore,
+      verificationScore: realVerificationScore,
       riskLevel: riskLevel,
-      status: 'Analyzed & Verified',
+      status: realVerificationStatus,
+      verificationStatus: realVerificationStatus,
+      verificationReasons: doc.verificationReasons || uploadResult.verification?.verificationReasons || [],
+      suspiciousIndicators: doc.suspiciousIndicators || uploadResult.verification?.suspiciousIndicators || [],
+      metadataAudit: doc.extractedMetadata?.metadataAudit || uploadResult.verification?.metadataAudit || null,
+      blockchainRecord: doc.blockchainRecord || uploadResult.verification?.blockchainRecord || null,
+      hashHistory: doc.hashHistory || uploadResult.verification?.hashHistory || [],
       hash: docHash,
+      fileHash: docHash,
       isBundle: !!isBundle,
       totalDocuments: isBundle ? bundle.total_documents : 1,
       totalPages: isBundle ? bundle.total_pages : (uploadResult.document_content?.pages?.length || 1),
@@ -90,7 +108,7 @@ export const saveDocumentHistory = (user, uploadResult, formTitle = '', formCate
       monetaryValues: ai.monetary_values || [],
       riskFactors: ai.risk_factors || ai.risk_flags || [],
       contradictions: ai.contradictions || [],
-      summary: ai.clauses?.[0]?.summary || ai.summary || doc.description || (isBundle ? `Multi-document bundle containing ${bundle.total_documents} verified instruments.` : 'AI document analysis completed successfully.'),
+      summary: ai.clauses?.[0]?.summary || ai.summary || doc.description || (isBundle ? `Multi-document bundle containing ${bundle.total_documents} verified instruments.` : 'Evidence-based document analysis completed.'),
       technicalMetadata: uploadResult.technical_metadata || null,
       aiError: uploadResult.aiError || null
     };

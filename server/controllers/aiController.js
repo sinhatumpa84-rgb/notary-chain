@@ -11,67 +11,58 @@ const toolGateway = require('../services/ai/toolGateway');
 
 // ─── AI Provider Configuration ───────────────────────────────────────────────
 const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const XAI_API_KEY = process.env.XAI_API_KEY || '';
 const GROQ_BASE_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const XAI_BASE_URL = 'https://api.x.ai/v1/chat/completions';
 const GROQ_MODELS = ['openai/gpt-oss-120b', 'qwen/qwen3.6-27b', 'openai/gpt-oss-20b', 'groq/compound'];
-const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-1.5-flash'];
+const GROK_MODELS = ['grok-2-latest', 'grok-2-1212', 'grok-beta'];
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function callGemini(messages, temperature = 0.35, max_tokens = 1400, jsonFormat = false) {
-  if (!GEMINI_API_KEY) return null;
+async function callGrok(messages, temperature = 0.35, max_tokens = 1400, jsonFormat = false) {
+  if (!XAI_API_KEY) return null;
 
-  for (const model of GEMINI_MODELS) {
-    for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (const model of GROK_MODELS) {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         const payload = {
-          contents: messages.map((message) => ({
-            role: message.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: message.content || '' }]
-          })),
-          generationConfig: {
-            temperature,
-            maxOutputTokens: max_tokens,
-            ...(jsonFormat ? { responseMimeType: 'application/json' } : {})
-          }
+          model,
+          messages,
+          temperature,
+          max_tokens
         };
+        if (jsonFormat) {
+          payload.response_format = { type: 'json_object' };
+        }
 
         const res = await axios.post(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+          XAI_BASE_URL,
           payload,
           {
-            timeout: 30000,
-            headers: { 'Content-Type': 'application/json' }
+            timeout: 20000,
+            headers: {
+              'Authorization': `Bearer ${XAI_API_KEY}`,
+              'Content-Type': 'application/json'
+            }
           }
         );
 
-        const content = res.data?.candidates?.[0]?.content?.parts
-          ?.map((part) => part.text)
-          .join('')
-          .trim();
-
+        const content = res.data?.choices?.[0]?.message?.content;
         if (content) {
-          return content;
+          return content.trim();
         }
-
-        const finishReason = res.data?.candidates?.[0]?.finishReason;
-        if (finishReason === 'SAFETY' || finishReason === 'RECITATION' || finishReason === 'BLOCKLIST') {
-          logger.warn(`[Gemini] Model ${model} rejected response for safety:`, finishReason);
-          return null;
-        }
-
         return null;
       } catch (e) {
         const status = e.response?.status;
-        const isTransient = status === 429 || status === 503 || e.code === 'ECONNABORTED' || e.code === 'ETIMEDOUT' || (!status && e.message && /timeout|network|socket|ECONN/i.test(e.message));
+        const isTransient = status === 429 || status === 503 || e.code === 'ECONNABORTED' || e.code === 'ETIMEDOUT';
 
-        if (isTransient && attempt < 2) {
+        if (isTransient && attempt < 1) {
           const delayMs = 500 * (attempt + 1);
-          logger.warn(`[Gemini] Transient error on model ${model} (${status || 'network'}), retrying in ${delayMs}ms`);
+          logger.warn(`[Grok] Transient error on model ${model} (${status || 'network'}), retrying in ${delayMs}ms`);
           await sleep(delayMs);
           continue;
         }
 
-        logger.warn(`[Gemini] Model ${model} call warning:`, e.response?.data?.error?.message || e.message);
+        logger.warn(`[Grok] Model ${model} call warning:`, e.response?.data?.error?.message || e.message);
         break;
       }
     }
@@ -81,6 +72,12 @@ async function callGemini(messages, temperature = 0.35, max_tokens = 1400, jsonF
 }
 
 async function callGroq(messages, temperature = 0.35, max_tokens = 1400, jsonFormat = false) {
+  // First try Grok (xAI) as required
+  const grokResponse = await callGrok(messages, temperature, max_tokens, jsonFormat);
+  if (grokResponse) {
+    return grokResponse;
+  }
+
   if (GROQ_API_KEY) {
     for (const model of GROQ_MODELS) {
       try {
@@ -106,11 +103,6 @@ async function callGroq(messages, temperature = 0.35, max_tokens = 1400, jsonFor
         logger.warn(`[Groq] Model ${model} call warning:`, e.response?.data?.error?.message || e.message);
       }
     }
-  }
-
-  const geminiFallback = await callGemini(messages, temperature, max_tokens, jsonFormat);
-  if (geminiFallback) {
-    return geminiFallback;
   }
 
   // Fallback intelligent AI responder

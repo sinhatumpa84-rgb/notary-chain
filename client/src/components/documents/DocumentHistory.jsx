@@ -34,6 +34,25 @@ const SEV = {
   info:   { bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-700',   dot: 'bg-blue-500' },
 };
 
+const getStatusBadge = (status = '') => {
+  const norm = String(status).toUpperCase().replace(/\s+/g, '_');
+  switch (norm) {
+    case 'VERIFIED':
+      return { label: 'VERIFIED', cls: 'bg-emerald-100 text-emerald-800 border-emerald-300' };
+    case 'SUSPICIOUS':
+      return { label: 'SUSPICIOUS', cls: 'bg-amber-100 text-amber-800 border-amber-300' };
+    case 'REJECTED':
+      return { label: 'REJECTED', cls: 'bg-red-100 text-red-800 border-red-300' };
+    case 'ANALYSIS_FAILED':
+      return { label: 'ANALYSIS FAILED', cls: 'bg-red-100 text-red-800 border-red-300' };
+    case 'PENDING_REVIEW':
+      return { label: 'PENDING REVIEW', cls: 'bg-amber-100 text-amber-800 border-amber-300' };
+    case 'UNVERIFIED':
+    default:
+      return { label: 'UNVERIFIED', cls: 'bg-slate-100 text-slate-700 border-slate-300' };
+  }
+};
+
 const DocumentHistory = () => {
   const { user } = useAuth();
   const [historyItems, setHistoryItems] = useState([]);
@@ -147,11 +166,21 @@ const DocumentHistory = () => {
                 >
                   <div className="space-y-3">
                     {/* Top Row: Category & Status */}
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#55504B] bg-[#F6F3EE] px-2.5 py-1 rounded-lg border border-[#E8E2DA]">
-                        <Layers className="w-3 h-3 text-[#2D6A4F]" />
-                        {isBundle ? `Bundle (${item.totalDocuments || item.documents?.length} Docs)` : (item.category || 'Contract')}
-                      </span>
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#55504B] bg-[#F6F3EE] px-2.5 py-1 rounded-lg border border-[#E8E2DA]">
+                          <Layers className="w-3 h-3 text-[#2D6A4F]" />
+                          {isBundle ? `Bundle (${item.totalDocuments || item.documents?.length} Docs)` : (item.category || 'Contract')}
+                        </span>
+                        {(() => {
+                          const sb = getStatusBadge(item.verificationStatus || item.status);
+                          return (
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${sb.cls}`}>
+                              {sb.label}
+                            </span>
+                          );
+                        })()}
+                      </div>
                       
                       <div className="flex items-center gap-1.5">
                         <RiskMeter
@@ -239,7 +268,8 @@ const DocumentHistory = () => {
           const currentDoc = isBundle && subDocs[activeSubDocIndex] ? subDocs[activeSubDocIndex] : null;
           const ai = isBundle ? (currentDoc?.analysis || currentDoc) : (selectedItem.aiAnalysis || selectedItem);
           const tech = selectedItem.technicalMetadata || selectedItem.bundleResult?.technical_metadata;
-          const score = typeof ai?.trust_score === 'number' ? ai.trust_score : (typeof selectedItem.trustScore === 'number' ? selectedItem.trustScore : 95);
+          const score = typeof ai?.trust_score === 'number' ? ai.trust_score : (typeof selectedItem.trustScore === 'number' ? selectedItem.trustScore : 85);
+          const statusBadge = getStatusBadge(selectedItem.verificationStatus || selectedItem.status);
 
           return (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-[#2E2A26]/40 backdrop-blur-xs">
@@ -274,9 +304,14 @@ const DocumentHistory = () => {
                 <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5 flex-1">
                   {/* Meta Banner */}
                   <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-[#F0FAF5] border border-[#B3E4CC] rounded-xl text-xs">
-                    <div>
-                      <span className="text-[#52796F] font-semibold">Category: </span>
-                      <span className="text-[#2D6A4F] font-bold">{selectedItem.category}</span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div>
+                        <span className="text-[#52796F] font-semibold">Category: </span>
+                        <span className="text-[#2D6A4F] font-bold">{selectedItem.category}</span>
+                      </div>
+                      <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase ${statusBadge.cls}`}>
+                        {statusBadge.label}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -304,6 +339,35 @@ const DocumentHistory = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Verification Reasons & Deterministic Rules */}
+                  {selectedItem.verificationReasons?.length > 0 && (
+                    <div className="p-3.5 bg-[#FAF8F4] border border-[#E8E2DA] rounded-xl text-xs space-y-1.5">
+                      <p className="font-bold text-[#2E2A26] uppercase text-[10px] tracking-wider flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-[#2D6A4F]" /> Verification Engine Evidence & Deterministic Rules
+                      </p>
+                      <ul className="list-disc list-inside text-[#55504B] space-y-1 text-xs">
+                        {selectedItem.verificationReasons.map((reason, i) => (
+                          <li key={i}>{reason}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Blockchain Anchor Proof */}
+                  {selectedItem.blockchainRecord?.txHash && (
+                    <div className="p-3.5 bg-[#F0FAF5] border border-[#B3E4CC] rounded-xl text-xs space-y-1.5">
+                      <p className="font-bold text-[#2D6A4F] uppercase text-[10px] tracking-wider flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-[#2D6A4F]" /> On-Chain Blockchain Proof (Polygon Amoy)
+                      </p>
+                      <div className="text-[11px] font-mono text-[#52796F] space-y-1">
+                        <div>TX Hash: <span className="text-[#2D6A4F] font-bold break-all">{selectedItem.blockchainRecord.txHash}</span></div>
+                        {selectedItem.blockchainRecord.blockNumber && (
+                          <div>Block Number: <span className="font-bold">#{selectedItem.blockchainRecord.blockNumber}</span></div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Prominent Risk Meter (Out of 10) */}
                   <RiskMeter

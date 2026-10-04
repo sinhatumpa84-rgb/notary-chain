@@ -13,6 +13,8 @@ const { extractDocumentContentAndMetadata } = require('../utils/pdfExtractor');
 const { calculateDeterministicTrustScore } = require('../utils/trustScoreEngine');
 const { detectDocumentBundle } = require('../utils/bundleDetector');
 const { sanitizePartiesList } = require('../utils/entityValidator');
+const { processAndVerifyDocument } = require('../services/verificationEngine');
+const { analyzeEvidenceWithGrok } = require('../services/ai/grokService');
 
 /* ─── Multer – store uploads in memory for 100% serverless compatibility ─ */
 const storage = multer.memoryStorage();
@@ -577,48 +579,41 @@ exports.upload = async (req, res, next) => {
 
     const docTitle = (title || path.parse(file.originalname).name).trim();
 
-    // ── 1. Compute SHA-256 directly on raw uploaded file bytes ────
-    const fileBuffer = file.buffer || (file.path ? fs.readFileSync(file.path) : Buffer.from(''));
-    const sha256Hash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
-    logger.info(`[SHA256] Canonical raw file cryptographic hash: ${sha256Hash}`);
-
-    // ── 2. Extract visible document content vs technical metadata ─
-    logger.info('[TEXT_EXTRACTION] Extracting visible text and separating technical metadata');
-    const extractionResult = await extractDocumentContentAndMetadata(
+    // ── 1. Execute Evidence-Based Verification Pipeline ───────────
+    const verificationResult = await processAndVerifyDocument({
       fileBuffer,
-      file.mimetype,
-      file.originalname,
-      req.body.extractedText
-    );
+      originalFilename: file.originalname,
+      mimetype: file.mimetype,
+      docTitle,
+      category: category || 'contract',
+      user: req.user,
+      clientOcrText: req.body.extractedText
+    });
 
-    const { document_content, technical_metadata, extraction_status, requires_ocr, total_chars } = extractionResult;
-    logger.info(`[TEXT_LENGTH] Total visible extracted characters: ${total_chars} across ${document_content.pages.length} page(s)`);
-    logger.info(`[OCR_CHECK] Extraction status: ${extraction_status}, requires_ocr: ${requires_ocr}`);
+    const sha256Hash = verificationResult.fileHash;
+    const document_content = verificationResult.documentContent || { pages: [{ page_number: 1, text: verificationResult.extractedText || '' }] };
+    const technical_metadata = verificationResult.extractedMetadata || {};
+    const primaryAiAnalysis = verificationResult.aiAnalysis;
 
-    // Clean any malformed Unicode in technical metadata
-    if (technical_metadata.certificates?.issuer) {
-      technical_metadata.certificates.issuer = technical_metadata.certificates.issuer.replace(/\uFFFD+/g, '').trim();
-    }
-
-    // ── 3. Multi-Document Bundle Detection ────────────────────────
+    // ── 2. Multi-Document Bundle Detection ────────────────────────
     const bundleDetection = detectDocumentBundle(document_content, docTitle);
     logger.info(`[BUNDLE_DETECTION] Mode: ${bundleDetection.document_mode}, Detected ${bundleDetection.total_documents} document(s)`);
 
     let bundleResult = null;
-    let primaryAiAnalysis = null;
     let aiError = null;
 
-    try {
-      if (bundleDetection.document_mode === 'BUNDLE') {
+    if (bundleDetection.document_mode === 'BUNDLE') {
+      try {
         const subDocAnalyses = await Promise.all(
           bundleDetection.documents.map(async (subDoc) => {
-            const analysis = await analyzeDocumentContentWithGroq(
-              subDoc.content,
-              technical_metadata,
-              subDoc.title,
-              subDoc.category,
-              subDoc.document_index
-            );
+            const analysis = await analyzeEvidenceWithGrok({
+              documentText: subDoc.content.pages.map(p => p.text).join('\n'),
+              documentTitle: subDoc.title,
+              filename: file.originalname,
+              mimetype: file.mimetype,
+              metadataEvidence: { technical_metadata },
+              pageCount: subDoc.pages.length
+            });
             return {
               document_index: subDoc.document_index,
               title: subDoc.title,
@@ -630,12 +625,12 @@ exports.upload = async (req, res, next) => {
           })
         );
 
-        const highestRisk = subDocAnalyses.some(d => d.analysis.risk_level === 'HIGH')
+        const highestRisk = subDocAnalyses.some(d => d.analysis?.risk_level === 'high')
           ? 'HIGH'
-          : (subDocAnalyses.some(d => d.analysis.risk_level === 'MEDIUM') ? 'MEDIUM' : 'LOW');
+          : (subDocAnalyses.some(d => d.analysis?.risk_level === 'medium') ? 'MEDIUM' : 'LOW');
 
         const docsRequiringReview = subDocAnalyses.filter(
-          d => d.analysis.risk_level === 'HIGH' || d.analysis.risk_level === 'MEDIUM'
+          d => d.analysis?.risk_level === 'high' || d.analysis?.risk_level === 'medium'
         ).length;
 
         bundleResult = {
@@ -649,43 +644,32 @@ exports.upload = async (req, res, next) => {
           overall_status: docsRequiringReview > 0 ? 'REVIEW REQUIRED' : 'CLEAN',
           documents: subDocAnalyses
         };
-
-        primaryAiAnalysis = subDocAnalyses[0].analysis;
-      } else {
-        // Single document mode
-        primaryAiAnalysis = await analyzeDocumentContentWithGroq(
-          document_content,
-          technical_metadata,
-          docTitle,
-          category || 'contract',
-          1
-        );
-
-        bundleResult = {
-          document_mode: 'SINGLE',
-          bundle_title: docTitle,
-          bundle_sha256: sha256Hash,
-          total_documents: 1,
-          total_pages: document_content.pages.length,
-          highest_risk: primaryAiAnalysis.risk_level || 'LOW',
-          documents_requiring_review: (primaryAiAnalysis.risk_level === 'HIGH' || primaryAiAnalysis.risk_level === 'MEDIUM') ? 1 : 0,
-          overall_status: primaryAiAnalysis.risk_level === 'HIGH' ? 'REVIEW REQUIRED' : 'VERIFIED',
-          documents: [{
-            document_index: 1,
-            title: docTitle,
-            category: primaryAiAnalysis.document?.category || category || 'contract',
-            pages: document_content.pages.map(p => p.page_number),
-            content_hash: sha256Hash,
-            analysis: primaryAiAnalysis
-          }]
-        };
+      } catch (err) {
+        logger.error('Bundle analysis error:', err.message);
+        aiError = 'Bundle analysis partially completed';
       }
-    } catch (err) {
-      logger.error('Groq analysis error during upload:', err.message);
-      aiError = 'AI analysis temporarily unavailable';
+    } else {
+      bundleResult = {
+        document_mode: 'SINGLE',
+        bundle_title: docTitle,
+        bundle_sha256: sha256Hash,
+        total_documents: 1,
+        total_pages: document_content.pages.length,
+        highest_risk: verificationResult.riskLevel || 'LOW',
+        documents_requiring_review: verificationResult.verificationStatus === 'PENDING_REVIEW' ? 1 : 0,
+        overall_status: verificationResult.verificationStatus,
+        documents: [{
+          document_index: 1,
+          title: docTitle,
+          category: verificationResult.documentType || category || 'contract',
+          pages: document_content.pages.map(p => p.page_number),
+          content_hash: sha256Hash,
+          analysis: primaryAiAnalysis
+        }]
+      };
     }
 
-    // ── 4. Save Document record & AI Report to MongoDB ────────────
+    // ── 3. Save Document record & AI Report to MongoDB ────────────
     let docRecord = null;
     const combinedOcrText = document_content.pages.map(p => p.text).join('\n');
 
@@ -696,19 +680,36 @@ exports.upload = async (req, res, next) => {
         description:      description || '',
         fileUrl:          `/uploads/${Date.now()}-${file.originalname}`,
         originalFileName: file.originalname,
+        originalFilename: file.originalname,
         fileType:         path.extname(file.originalname).replace('.', '').toUpperCase(),
         fileSize:         file.size || fileBuffer.length,
         mimeType:         file.mimetype,
         uploadedBy:       uId,
         hash:             sha256Hash,
-        category:         category || (bundleResult?.document_mode === 'BUNDLE' ? 'bundle' : 'contract'),
-        status:           'draft',
+        fileHash:         sha256Hash,
+        documentType:     verificationResult.documentType,
+        extractedMetadata: technical_metadata,
+        extractedText:    combinedOcrText.substring(0, 8000),
+        aiAnalysis:       primaryAiAnalysis || null,
+        verificationStatus: verificationResult.verificationStatus,
+        verificationScore: verificationResult.verificationScore,
+        riskScore:        verificationResult.riskScore,
+        verificationReasons: verificationResult.verificationReasons,
+        suspiciousIndicators: verificationResult.suspiciousIndicators,
+        hashHistory:      verificationResult.hashHistory,
+        blockchainRecord: verificationResult.blockchainRecord,
+        status:           verificationResult.verificationStatus.toLowerCase(),
+        category:         category || verificationResult.documentType || (bundleResult?.document_mode === 'BUNDLE' ? 'bundle' : 'contract'),
+        uploadedAt:       new Date(),
+        analyzedAt:       new Date(),
+        analysisVersion:  '3.0.0-grok',
         metadata: {
           ocrText: combinedOcrText.substring(0, 8000),
           document_content,
           technical_metadata,
           bundle_result: bundleResult,
-          aiAnalysis: primaryAiAnalysis || null
+          aiAnalysis: primaryAiAnalysis || null,
+          verificationResult
         }
       });
 
@@ -718,7 +719,7 @@ exports.upload = async (req, res, next) => {
           reportType:     'summarization',
           status:         primaryAiAnalysis ? 'completed' : 'failed',
           results:        bundleResult || primaryAiAnalysis || { error: aiError },
-          confidence:     primaryAiAnalysis?.trust_score || 0,
+          confidence:     verificationResult.verificationScore || 0,
           requestedBy:    req.user._id,
           processedAt:    new Date(),
           processingTime: 0
@@ -738,7 +739,9 @@ exports.upload = async (req, res, next) => {
             category: category || 'contract',
             hash: sha256Hash,
             document_mode: bundleResult?.document_mode,
-            total_documents: bundleResult?.total_documents
+            total_documents: bundleResult?.total_documents,
+            verificationStatus: verificationResult.verificationStatus,
+            verificationScore: verificationResult.verificationScore
           }
         });
         logger.info('[AUDIT_LOG] Audit log recorded successfully');
@@ -747,7 +750,7 @@ exports.upload = async (req, res, next) => {
       }
     }
 
-    // ── 5. Authoritative Quota Update ─────────────────────────────
+    // ── 4. Authoritative Quota Update ─────────────────────────────
     if (currentUserDoc) {
       currentUserDoc.subscription = currentUserDoc.subscription || {};
       const newCount = (currentUserDoc.subscription.verificationCount || 0) + 1;
@@ -758,37 +761,33 @@ exports.upload = async (req, res, next) => {
       await currentUserDoc.save();
     }
 
-    // ── 6. Return Structured API Response ─────────────────────────
+    // ── 5. Return Structured API Response ─────────────────────────
     return res.status(201).json({
       success: true,
-      message: bundleResult?.document_mode === 'BUNDLE'
-        ? `✅ Multi-document bundle detected: ${bundleResult.total_documents} documents analyzed`
-        : '✅ Document uploaded and analyzed by Groq AI',
+      message: `Document processed. Verification Status: ${verificationResult.verificationStatus}`,
       data: {
-        document: docRecord
-          ? {
-              _id:              docRecord._id,
-              title:            docRecord.title,
-              status:           docRecord.status,
-              hash:             docRecord.hash,
-              category:         docRecord.category,
-              originalFileName: docRecord.originalFileName,
-              fileSize:         docRecord.fileSize,
-              mimeType:         docRecord.mimeType,
-              createdAt:        docRecord.createdAt
-            }
-          : {
-              title:            docTitle,
-              hash:             sha256Hash,
-              originalFileName: file.originalname,
-              fileSize:         file.size
-            },
-        analysis_version: NOTARYCHAIN_ANALYSIS_VERSION,
+        document: docRecord || {
+          title: docTitle,
+          hash: sha256Hash,
+          fileHash: sha256Hash,
+          verificationStatus: verificationResult.verificationStatus,
+          verificationScore: verificationResult.verificationScore,
+          originalFileName: file.originalname,
+          fileSize: file.size
+        },
+        verificationStatus: verificationResult.verificationStatus,
+        verificationScore: verificationResult.verificationScore,
+        riskScore: verificationResult.riskScore,
+        riskLevel: verificationResult.riskLevel,
+        verificationReasons: verificationResult.verificationReasons,
+        suspiciousIndicators: verificationResult.suspiciousIndicators,
+        blockchainRecord: verificationResult.blockchainRecord,
+        analysis_version: '3.0.0-grok',
         document_content,
         technical_metadata,
         bundle_result: bundleResult,
         aiAnalysis: primaryAiAnalysis || null,
-        aiError:    aiError           || null
+        aiError: aiError || null
       }
     });
   } catch (err) {
@@ -801,13 +800,183 @@ exports.upload = async (req, res, next) => {
 const d = require('../services/documentService');
 const h = require('../utils/helpers');
 
-exports.getAll          = async (req, res, next) => { try { const data = await d.getAll(req.user._id, req.user.role, h.getPaginationParams(req.query)); r.paginated(res, data.data, req.query.page || 1, req.query.limit || 10, data.total); } catch (x) { next(x); } };
-exports.getById         = async (req, res, next) => { try { r.success(res, await d.getById(req.params.id, req.user._id)); } catch (x) { next(x); } };
-exports.update          = async (req, res, next) => { try { r.success(res, await d.update(req.params.id, req.user._id, req.body)); } catch (x) { next(x); } };
-exports.deleteDocument  = async (req, res, next) => { try { await d.softDelete(req.params.id, req.user._id); r.success(res, null, 'Deleted'); } catch (x) { next(x); } };
-exports.uploadNewVersion= async (req, res, next) => { try { r.success(res, await d.addVersion(req.params.id, req.user._id, { url: '/v2.pdf', name: 'v2', size: 100 }, 'v2')); } catch (x) { next(x); } };
-exports.shareDocument   = async (req, res, next) => { try { r.success(res, await d.shareDocument(req.params.id, req.user._id, { user: req.body.userId, permission: req.body.permission })); } catch (x) { next(x); } };
-exports.removeShare     = async (req, res, next) => { try { r.success(res, await d.removeShare(req.params.id, req.user._id, req.params.userId)); } catch (x) { next(x); } };
-exports.updateStatus    = async (req, res, next) => { try { r.success(res, await d.updateStatus(req.params.id, req.user._id, req.user.role, req.body.status)); } catch (x) { next(x); } };
-exports.downloadDocument= async (req, res, next) => { try { r.success(res, { url: 'mock_url' }); } catch (x) { next(x); } };
-exports.getTimeline     = async (req, res, next) => { try { r.success(res, await d.getTimeline(req.params.id)); } catch (x) { next(x); } };
+exports.getAll = async (req, res, next) => {
+  try {
+    const data = await d.getAll(req.user._id, req.user.role, h.getPaginationParams(req.query));
+    r.paginated(res, data.data, req.query.page || 1, req.query.limit || 10, data.total);
+  } catch (x) {
+    next(x);
+  }
+};
+
+exports.getById = async (req, res, next) => {
+  try {
+    r.success(res, await d.getById(req.params.id, req.user._id));
+  } catch (x) {
+    next(x);
+  }
+};
+
+exports.update = async (req, res, next) => {
+  try {
+    r.success(res, await d.update(req.params.id, req.user._id, req.body));
+  } catch (x) {
+    next(x);
+  }
+};
+
+exports.deleteDocument = async (req, res, next) => {
+  try {
+    await d.softDelete(req.params.id, req.user._id);
+    r.success(res, null, 'Deleted');
+  } catch (x) {
+    next(x);
+  }
+};
+
+// ─── Real uploadNewVersion with hash comparison & audit trail ──────────
+exports.uploadNewVersion = async (req, res, next) => {
+  try {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ success: false, message: 'Please attach a new document file for versioning.' });
+    }
+
+    const docId = req.params.id;
+    const existingDoc = await Document.findOne({ _id: docId, uploadedBy: req.user._id, isDeleted: false });
+    if (!existingDoc) {
+      return res.status(404).json({ success: false, message: 'Document not found or unauthorized.' });
+    }
+
+    const fileBuffer = file.buffer || (file.path ? fs.readFileSync(file.path) : Buffer.from(''));
+    const verificationResult = await processAndVerifyDocument({
+      fileBuffer,
+      originalFilename: file.originalname,
+      mimetype: file.mimetype,
+      docTitle: existingDoc.title,
+      category: existingDoc.category,
+      user: req.user,
+      existingDoc
+    });
+
+    // Save previous version in versions array
+    existingDoc.versions.push({
+      versionNumber: existingDoc.currentVersion || 1,
+      fileUrl: existingDoc.fileUrl,
+      fileName: existingDoc.originalFileName,
+      fileSize: existingDoc.fileSize,
+      uploadedAt: existingDoc.updatedAt || existingDoc.createdAt,
+      uploadedBy: req.user._id,
+      changeNotes: req.body.changeNotes || `Updated to version ${(existingDoc.currentVersion || 1) + 1}`
+    });
+
+    existingDoc.currentVersion = (existingDoc.currentVersion || 1) + 1;
+    existingDoc.fileUrl = `/uploads/${Date.now()}-${file.originalname}`;
+    existingDoc.originalFileName = file.originalname;
+    existingDoc.fileSize = file.size || fileBuffer.length;
+    existingDoc.mimeType = file.mimetype;
+    existingDoc.hash = verificationResult.fileHash;
+    existingDoc.fileHash = verificationResult.fileHash;
+    existingDoc.documentType = verificationResult.documentType;
+    existingDoc.extractedMetadata = verificationResult.extractedMetadata;
+    existingDoc.extractedText = verificationResult.extractedText?.substring(0, 8000);
+    existingDoc.aiAnalysis = verificationResult.aiAnalysis;
+    existingDoc.verificationStatus = verificationResult.verificationStatus;
+    existingDoc.verificationScore = verificationResult.verificationScore;
+    existingDoc.riskScore = verificationResult.riskScore;
+    existingDoc.verificationReasons = verificationResult.verificationReasons;
+    existingDoc.suspiciousIndicators = verificationResult.suspiciousIndicators;
+    existingDoc.hashHistory = verificationResult.hashHistory;
+    existingDoc.blockchainRecord = verificationResult.blockchainRecord;
+    existingDoc.status = verificationResult.verificationStatus.toLowerCase();
+    existingDoc.analyzedAt = new Date();
+
+    await existingDoc.save();
+
+    // Log in AuditLog
+    const AuditLog = require('../models/AuditLog');
+    await AuditLog.create({
+      userId: req.user._id,
+      userRole: req.user.role || 'company',
+      documentId: existingDoc._id,
+      action: 'DOCUMENT_VERSION_UPLOADED',
+      category: 'document',
+      status: 'success',
+      metadata: {
+        newHash: verificationResult.fileHash,
+        version: existingDoc.currentVersion,
+        isHashMismatch: verificationResult.isHashMismatch,
+        newStatus: verificationResult.verificationStatus
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Version ${existingDoc.currentVersion} uploaded and audited. Status: ${verificationResult.verificationStatus}`,
+      data: {
+        document: existingDoc,
+        verificationResult
+      }
+    });
+  } catch (err) {
+    logger.error('Upload new version error:', err.message);
+    next(err);
+  }
+};
+
+exports.shareDocument = async (req, res, next) => {
+  try {
+    r.success(res, await d.shareDocument(req.params.id, req.user._id, { user: req.body.userId, permission: req.body.permission }));
+  } catch (x) {
+    next(x);
+  }
+};
+
+exports.removeShare = async (req, res, next) => {
+  try {
+    r.success(res, await d.removeShare(req.params.id, req.user._id, req.params.userId));
+  } catch (x) {
+    next(x);
+  }
+};
+
+exports.updateStatus = async (req, res, next) => {
+  try {
+    r.success(res, await d.updateStatus(req.params.id, req.user._id, req.user.role, req.body.status));
+  } catch (x) {
+    next(x);
+  }
+};
+
+// ─── Real downloadDocument returning actual file metadata ───────────
+exports.downloadDocument = async (req, res, next) => {
+  try {
+    const doc = await Document.findOne({ _id: req.params.id, uploadedBy: req.user._id, isDeleted: false });
+    if (!doc) {
+      return res.status(404).json({ success: false, message: 'Document not found.' });
+    }
+    return res.json({
+      success: true,
+      data: {
+        title: doc.title,
+        originalFileName: doc.originalFileName,
+        fileHash: doc.fileHash || doc.hash,
+        verificationStatus: doc.verificationStatus,
+        verificationScore: doc.verificationScore,
+        downloadUrl: doc.fileUrl,
+        mimeType: doc.mimeType,
+        size: doc.fileSize
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getTimeline = async (req, res, next) => {
+  try {
+    r.success(res, await d.getTimeline(req.params.id));
+  } catch (x) {
+    next(x);
+  }
+};
