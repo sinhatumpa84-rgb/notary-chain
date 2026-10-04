@@ -337,3 +337,21 @@ body {
   }
 }
 
+/* ==========================================================================
+   TEMPORARY: Razorpay Test Mode Checkout Presentation Framing
+   Target: Isolated parent wrapper/frame for clean development/demo presentation.
+   Safe to remove when switching to live Razorpay key.
+   ========================================================================== */
+body.razorpayTestModeWrapper {
+  overflow: hidden !important;
+}
+
+body.razorpayTestModeWrapper .razorpay-checkout-frame {
+  border: none !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  -webkit-overflow-scrolling: touch;
+}
+

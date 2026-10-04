@@ -63,6 +63,9 @@ export const initiateRazorpayCheckout = async ({
     image: '/favicon.ico',
     order_id: orderId,
     handler: function (response) {
+      if (typeof document !== 'undefined') {
+        document.body.classList.remove('razorpayTestModeWrapper');
+      }
       if (onSuccess) {
         onSuccess({
           razorpay_order_id: response.razorpay_order_id,
@@ -85,6 +88,9 @@ export const initiateRazorpayCheckout = async ({
     },
     modal: {
       ondismiss: function () {
+        if (typeof document !== 'undefined') {
+          document.body.classList.remove('razorpayTestModeWrapper');
+        }
         if (onDismiss) onDismiss();
       },
       escape: true,
@@ -95,6 +101,9 @@ export const initiateRazorpayCheckout = async ({
   try {
     const rzp = new window.Razorpay(options);
     rzp.on('payment.failed', function (response) {
+      if (typeof document !== 'undefined') {
+        document.body.classList.remove('razorpayTestModeWrapper');
+      }
       if (onError) {
         onError({
           code: response.error?.code,
@@ -105,8 +114,17 @@ export const initiateRazorpayCheckout = async ({
         });
       }
     });
+
+    // TEMPORARY: Apply isolated styling wrapper to parent body during Test Mode checkout
+    if (typeof document !== 'undefined') {
+      document.body.classList.add('razorpayTestModeWrapper');
+    }
+
     rzp.open();
   } catch (err) {
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('razorpayTestModeWrapper');
+    }
     if (onError) onError(err);
   }
 };

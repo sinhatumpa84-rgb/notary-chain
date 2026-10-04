@@ -85,7 +85,7 @@ class AIModelRouter {
   async callGemini(messages, temperature = 0.2, maxTokens = 1200) {
     if (!this.geminiApiKey) return null;
 
-    const geminiModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+    const geminiModels = ['gemini-3.8-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
     for (const model of geminiModels) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.geminiApiKey}`;
