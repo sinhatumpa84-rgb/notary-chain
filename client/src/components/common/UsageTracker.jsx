@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Crown, ArrowUpRight, Check, Sparkles, AlertTriangle } from 'lucide-react';
+import { BarChart3, Crown, ArrowUpRight, Check, Sparkles, AlertTriangle, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePlan } from '../../context/PlanContext';
 import UpgradeModal from './UpgradeModal';
@@ -41,6 +41,23 @@ export default function UsageTracker() {
     } else {
       setModalOpen(false);
     }
+  };
+
+  const [isDismissed, setIsDismissed] = useState(() => {
+    try {
+      return sessionStorage.getItem('notarychain_usage_tracker_dismissed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleDismiss = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDismissed(true);
+    try {
+      sessionStorage.setItem('notarychain_usage_tracker_dismissed', 'true');
+    } catch {}
   };
 
   const [now, setNow] = useState(Date.now());
@@ -161,23 +178,44 @@ export default function UsageTracker() {
   }
 
   // Free Plan State
+  if (isDismissed) {
+    return (
+      <UpgradeModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
+    );
+  }
+
   return (
     <>
       <div className="rounded-xl bg-white p-3.5 ring-1 ring-[#E8E2DA] shadow-xs font-sans flex flex-col gap-2.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             <BarChart3 className="h-4 w-4 text-[#7B746E]" />
             <span className="text-xs font-bold text-[#2E2A26] uppercase tracking-wide">
               Free Plan
             </span>
           </div>
-          <button
-            onClick={handleOpenModal}
-            className="text-[11px] font-bold text-[#2D6A4F] hover:text-[#1B4532] flex items-center gap-0.5 transition-colors cursor-pointer"
-          >
-            <span>Upgrade to Pro</span>
-            <ArrowUpRight className="h-3 w-3" />
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={handleOpenModal}
+              className="text-[11px] font-bold text-[#2D6A4F] hover:text-[#1B4532] flex items-center gap-0.5 transition-colors cursor-pointer"
+            >
+              <span>Upgrade to Pro</span>
+              <ArrowUpRight className="h-3 w-3" />
+            </button>
+            <button
+              type="button"
+              onClick={handleDismiss}
+              aria-label="Close"
+              title="Close"
+              className="p-1 -mr-1 text-[#7B746E] hover:text-[#2E2A26] hover:bg-[#FAF8F4] active:bg-[#E8E2DA] rounded-md transition-colors cursor-pointer flex items-center justify-center"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
 
         <div>
