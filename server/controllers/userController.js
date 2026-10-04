@@ -38,9 +38,25 @@ exports.getActivityTimeline = async (req, res, next) => {
   } catch (x) { next(x); }
 };
 
+const mongoose = require('mongoose');
+
+async function findUserSafely(reqUser) {
+  if (!reqUser) return null;
+  const rawId = reqUser._id || reqUser.id;
+  if (rawId && mongoose.Types.ObjectId.isValid(rawId)) {
+    const user = await User.findById(rawId);
+    if (user) return user;
+  }
+  if (reqUser.email) {
+    let user = await User.findOne({ email: reqUser.email.toLowerCase() });
+    return user;
+  }
+  return null;
+}
+
 exports.getQuota = async (req, res, next) => {
   try {
-    const u = await User.findById(req.user._id || req.user.id);
+    const u = await findUserSafely(req.user);
     if (!u) {
       return resU.success(res, {
         plan: 'FREE',
@@ -67,7 +83,7 @@ exports.upgradePlan = async (req, res, next) => {
     const validPlans = ['FREE', 'PRO', 'BUSINESS', 'ENTERPRISE'];
     if (!validPlans.includes(plan)) throw new err.BadRequestError('Invalid plan');
 
-    const u = await User.findById(req.user._id || req.user.id);
+    const u = await findUserSafely(req.user);
     if (!u) throw new err.NotFoundError('User not found');
 
     u.subscription = u.subscription || {};

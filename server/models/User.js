@@ -43,7 +43,10 @@ const userSchema = new mongoose.Schema({
     currentPeriodEnd: { 
       type: Date, 
       default: () => new Date(Date.now() + 24 * 60 * 60 * 1000) 
-    }
+    },
+    razorpayPaymentId: { type: String, default: null },
+    razorpayOrderId: { type: String, default: null },
+    billingCycle: { type: String, enum: ['monthly', 'annual', null], default: null }
   }
 }, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 

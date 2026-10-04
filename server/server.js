@@ -67,6 +67,7 @@ app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/neobank', require('./routes/neobankRoutes'));
 app.use('/api/face', require('./routes/faceRoutes'));
 app.use('/api/blockchain', require('./routes/blockchainRoutes'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
 
 app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
 app.use(errorHandler);

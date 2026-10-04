@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { PLANS } from '../utils/planConfig';
 import { useAuth } from '../hooks/useAuth';
 import api from '../api/axios';
+import { initiateRazorpayCheckout } from '../utils/razorpay';
 
 const PlanContext = createContext(null);
 
@@ -264,6 +266,102 @@ export function PlanProvider({ children }) {
     }
   }, [user]);
 
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  const processRazorpayPayment = useCallback(async ({ planKey = 'PRO', billingCycle = 'monthly' } = {}) => {
+    if (!isAuthenticated) {
+      toast.error('Please sign in to upgrade your subscription.');
+      return false;
+    }
+
+    const pKey = planKey.toUpperCase();
+    if (pKey === 'FREE') {
+      toast('You are on the Free plan');
+      return true;
+    }
+
+    setIsProcessingPayment(true);
+    const loadingToastId = toast.loading('Initializing Razorpay checkout...');
+
+    try {
+      // 1. Create order on backend
+      const orderRes = await api.post('/payments/create-order', {
+        plan: pKey,
+        billingCycle
+      });
+
+      const orderData = orderRes.data?.data || orderRes.data;
+      if (!orderData || !orderData.orderId) {
+        throw new Error(orderRes.data?.message || 'Failed to create order');
+      }
+
+      toast.dismiss(loadingToastId);
+
+      // 2. Open Razorpay Checkout modal
+      return new Promise((resolve) => {
+        initiateRazorpayCheckout({
+          orderId: orderData.orderId,
+          amount: orderData.amount,
+          currency: orderData.currency || 'INR',
+          keyId: orderData.keyId,
+          planName: orderData.planName || `NotaryChain ${pKey}`,
+          user: orderData.user || {
+            name: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email,
+            email: user?.email,
+            phone: user?.phone || ''
+          },
+          onSuccess: async (paymentDetails) => {
+            const verifyToastId = toast.loading('Verifying payment signature with NotaryChain...');
+            try {
+              const verifyRes = await api.post('/payments/verify-payment', {
+                razorpay_order_id: paymentDetails.razorpay_order_id,
+                razorpay_payment_id: paymentDetails.razorpay_payment_id,
+                razorpay_signature: paymentDetails.razorpay_signature,
+                plan: pKey,
+                billingCycle
+              });
+
+              const verifiedData = verifyRes.data?.data || verifyRes.data;
+              if (verifiedData?.quota) {
+                setQuotaData(verifiedData.quota);
+                if (user) {
+                  localStorage.setItem(getUserStorageKey(user), JSON.stringify(verifiedData.quota));
+                }
+              }
+
+              toast.dismiss(verifyToastId);
+              toast.success(`🎉 Payment verified! Upgraded to NotaryChain ${pKey}!`, { duration: 5000 });
+              setShowUpgradeModal(false);
+              resolve(true);
+            } catch (err) {
+              toast.dismiss(verifyToastId);
+              toast.error(err.response?.data?.message || 'Payment verification failed. Please contact support.');
+              resolve(false);
+            } finally {
+              setIsProcessingPayment(false);
+            }
+          },
+          onDismiss: () => {
+            setIsProcessingPayment(false);
+            toast('Payment checkout cancelled', { icon: 'ℹ️' });
+            resolve(false);
+          },
+          onError: (err) => {
+            setIsProcessingPayment(false);
+            toast.error(err.description || err.message || 'Payment processing error');
+            resolve(false);
+          }
+        });
+      });
+    } catch (err) {
+      toast.dismiss(loadingToastId);
+      setIsProcessingPayment(false);
+      const errMsg = err.response?.data?.message || err.message || 'Failed to initialize checkout';
+      toast.error(errMsg);
+      return false;
+    }
+  }, [isAuthenticated, user]);
+
   const value = {
     currentPlan,
     currentPlanKey,
@@ -284,7 +382,9 @@ export function PlanProvider({ children }) {
     setShowUpgradeModal,
     openUpgradeModal,
     dismissUpgradeModal,
-    hasDismissedModal
+    hasDismissedModal,
+    processRazorpayPayment,
+    isProcessingPayment
   };
 
   return (

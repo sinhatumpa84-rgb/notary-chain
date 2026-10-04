@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 const logger = require('../utils/logger');
 
-// Enable Mongoose command buffering so serverless cold-starts await DB connection
-mongoose.set('bufferCommands', true);
+// Disable Mongoose command buffering so server responds immediately without 10s timeouts
+mongoose.set('bufferCommands', false);
 
 let isConnecting = false;
 

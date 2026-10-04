@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, X, Sparkles, Shield, Zap, Building2, Crown } from 'lucide-react';
+import { Check, X, Sparkles, Shield, Zap, Building2, Crown, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { PLANS, PLAN_ORDER } from '../utils/planConfig';
 import { usePlan } from '../context/PlanContext';
+import { useAuth } from '../hooks/useAuth';
 
 const PRICING_DATA = [
   {
@@ -99,11 +100,40 @@ const FAQS = [
 
 export default function Pricing() {
   const [isAnnual, setIsAnnual] = useState(false);
-  const { currentPlanKey } = usePlan();
+  const [targetPlanLoading, setTargetPlanLoading] = useState(null);
+  const { currentPlanKey, processRazorpayPayment, isProcessingPayment } = usePlan();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
-  const handleUpgradeClick = (planKey) => {
-    if (planKey === currentPlanKey) return;
-    toast('Coming Soon!', { icon: '🚀' });
+  const handleUpgradeClick = async (planKey) => {
+    if (planKey.toUpperCase() === currentPlanKey.toUpperCase()) return;
+
+    if (planKey === 'enterprise') {
+      window.location.href = 'mailto:enterprise@notarychain.com?subject=NotaryChain%20Enterprise%20Plan%20Inquiry';
+      toast.success('Opening sales contact email...');
+      return;
+    }
+
+    if (planKey === 'free') {
+      toast('Free plan is automatically available to all accounts.');
+      return;
+    }
+
+    if (!isAuthenticated) {
+      toast('Please sign in to upgrade your subscription', { icon: '🔐' });
+      navigate('/login', { state: { from: '/pricing' } });
+      return;
+    }
+
+    try {
+      setTargetPlanLoading(planKey);
+      await processRazorpayPayment({
+        planKey: planKey.toUpperCase(),
+        billingCycle: isAnnual ? 'annual' : 'monthly'
+      });
+    } finally {
+      setTargetPlanLoading(null);
+    }
   };
 
   return (
@@ -215,19 +245,34 @@ export default function Pricing() {
                   ))}
                 </ul>
                 
-                <button
-                  onClick={() => handleUpgradeClick(plan.key)}
-                  disabled={isCurrent}
-                  className={`w-full rounded-lg px-4 py-3 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2D6A4F] ${
-                    isCurrent 
-                      ? 'bg-[#F0FAF5] text-[#2D6A4F] border border-[#B3E4CC] cursor-default'
-                      : plan.recommended
-                        ? 'bg-[#2D6A4F] text-white hover:bg-[#1B4532]'
-                        : 'bg-white text-[#2E2A26] ring-1 ring-inset ring-[#E8E2DA] hover:bg-[#FAF8F4]'
-                  }`}
-                >
-                  {isCurrent ? 'Current Plan' : plan.buttonText}
-                </button>
+                {(() => {
+                  const isCurrent = plan.key.toUpperCase() === currentPlanKey.toUpperCase();
+                  const isBtnLoading = targetPlanLoading === plan.key;
+                  return (
+                    <button
+                      onClick={() => handleUpgradeClick(plan.key)}
+                      disabled={isCurrent || isProcessingPayment}
+                      className={`w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2D6A4F] ${
+                        isCurrent 
+                          ? 'bg-[#F0FAF5] text-[#2D6A4F] border border-[#B3E4CC] cursor-default'
+                          : plan.recommended
+                            ? 'bg-[#2D6A4F] text-white hover:bg-[#1B4532]'
+                            : 'bg-white text-[#2E2A26] ring-1 ring-inset ring-[#E8E2DA] hover:bg-[#FAF8F4]'
+                      } ${(isCurrent || isProcessingPayment) ? 'cursor-default' : 'cursor-pointer'} ${isProcessingPayment && !isBtnLoading ? 'opacity-60' : ''}`}
+                    >
+                      {isBtnLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin text-current" />
+                          <span>Processing...</span>
+                        </>
+                      ) : isCurrent ? (
+                        'Current Plan'
+                      ) : (
+                        plan.buttonText
+                      )}
+                    </button>
+                  );
+                })()}
               </motion.div>
             );
           })}

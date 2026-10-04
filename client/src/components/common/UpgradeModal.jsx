@@ -7,18 +7,23 @@ import toast from 'react-hot-toast';
 
 export default function UpgradeModal({ isOpen, onClose }) {
   const navigate = useNavigate();
-  const { upgradePlan, currentPlanKey } = usePlan();
+  const { processRazorpayPayment, currentPlanKey, isProcessingPayment } = usePlan();
   const [upgrading, setUpgrading] = useState(false);
 
   const handleUpgradeToPro = async () => {
     try {
       setUpgrading(true);
-      await upgradePlan('PRO');
-      toast.success('🎉 Successfully upgraded to NotaryChain Pro!');
-      onClose();
+      const success = await processRazorpayPayment({ planKey: 'PRO', billingCycle: 'monthly' });
+      if (success) {
+        if (typeof onClose === 'function') {
+          onClose();
+        }
+      }
     } catch (err) {
       navigate('/pricing');
-      onClose();
+      if (typeof onClose === 'function') {
+        onClose();
+      }
     } finally {
       setUpgrading(false);
     }
@@ -100,10 +105,10 @@ export default function UpgradeModal({ isOpen, onClose }) {
             <div className="flex flex-col sm:flex-row-reverse gap-2.5">
               <button
                 onClick={handleUpgradeToPro}
-                disabled={upgrading}
-                className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#2D6A4F] px-4 py-3 sm:py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#1B4532] sm:w-auto cursor-pointer shadow-xs min-h-[44px]"
+                disabled={upgrading || isProcessingPayment}
+                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#2D6A4F] px-4 py-3 sm:py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#1B4532] sm:w-auto min-h-[44px] ${upgrading || isProcessingPayment ? 'opacity-75 cursor-default' : 'cursor-pointer shadow-xs'}`}
               >
-                {upgrading ? 'Upgrading…' : 'Upgrade to Pro — ₹499/mo'}
+                {upgrading || isProcessingPayment ? 'Opening Checkout...' : 'Upgrade to Pro — ₹499/mo'}
                 <ArrowUpRight className="h-3.5 w-3.5" />
               </button>
               <button
