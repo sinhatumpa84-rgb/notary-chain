@@ -36,7 +36,9 @@ class AIModelRouter {
   constructor() {
     this.xaiApiKey = process.env.XAI_API_KEY || '';
     this.groqApiKey = process.env.GROQ_API_KEY || '';
-    this.gemmaApiKey = process.env.GEMMA_API_KEY || process.env.GOOGLE_API_KEY || '';
+    this.geminiApiKey = process.env.GEMINI_API_KEY || '';
+    this.gammaApiKey = process.env.GAMMA_API_KEY || process.env.GEMMA_API_KEY || process.env.GOOGLE_API_KEY || '';
+    this.gemmaApiKey = this.gammaApiKey;
     this.digitalOceanInferenceUrl = process.env.DIGITALOCEAN_INFERENCE_URL || '';
     this.digitalOceanInferenceKey = process.env.DIGITALOCEAN_INFERENCE_KEY || '';
   }
@@ -81,7 +83,45 @@ class AIModelRouter {
   }
 
   /**
-   * Tertiary Fallback: Google Gemma
+   * Google Gemini Provider (configured via GEMINI_API_KEY)
+   */
+  async callGemini(messages, temperature = 0.2, maxTokens = 1200) {
+    if (!this.geminiApiKey) return null;
+
+    const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+    for (const model of geminiModels) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.geminiApiKey}`;
+        const promptText = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
+
+        const res = await axios.post(
+          url,
+          {
+            contents: [{ parts: [{ text: promptText }] }],
+            generationConfig: {
+              temperature,
+              maxOutputTokens: maxTokens,
+              responseMimeType: 'application/json'
+            }
+          },
+          { timeout: 15000, headers: { 'Content-Type': 'application/json' } }
+        );
+
+        const candidate = res.data?.candidates?.[0];
+        const content = candidate?.content?.parts?.map(x => x.text || '').join('');
+        if (content) {
+          logger.info(`[AI Router] Successfully responded via Google Gemini (${model})`);
+          return { content, model: `Google Gemini (${model})` };
+        }
+      } catch (err) {
+        logger.warn(`[AI Router] Gemini model ${model} warning:`, err.response?.data?.error?.message || err.message);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Tertiary Fallback: Google Gamma / Gemma (configured via GAMMA_API_KEY or GEMMA_API_KEY)
    */
   async callGemma(messages, temperature = 0.2, maxTokens = 1200) {
     if (!this.gemmaApiKey) return null;
@@ -318,17 +358,22 @@ Return a valid JSON object ONLY with exactly this structure:
     // Priority 1: xAI Grok (Official reasoning layer)
     let result = await this.callGrok(messages);
 
-    // Priority 2: Groq Open-Source Fallback
+    // Priority 2: Google Gemini
     if (!result) {
-      result = await this.callGroqFallback(messages);
+      result = await this.callGemini(messages);
     }
 
-    // Priority 3: Google Gemma
+    // Priority 3: Google Gamma / Gemma
     if (!result) {
       result = await this.callGemma(messages);
     }
 
-    // Priority 4: DigitalOcean GenAI Inference (Optional Cloud)
+    // Priority 4: Groq Open-Source Fallback
+    if (!result) {
+      result = await this.callGroqFallback(messages);
+    }
+
+    // Priority 5: DigitalOcean GenAI Inference (Optional Cloud)
     if (!result) {
       result = await this.callDigitalOcean(messages);
     }
@@ -348,7 +393,7 @@ Return a valid JSON object ONLY with exactly this structure:
       }
     }
 
-    // Priority 5: Deterministic Local Heuristic
+    // Priority 6: Deterministic Local Heuristic
     return this.generateLocalHeuristic({ verifiedResults, documentText: cleanText, title });
   }
 
@@ -379,10 +424,11 @@ ${ragContext}`;
       { role: 'user', content: sanitizeUntrustedText(message) }
     ];
 
-    // Grok -> Groq -> Gemma -> DigitalOcean -> Default
+    // Grok -> Gemini -> Gamma/Gemma -> Groq -> DigitalOcean -> Default
     let result = await this.callGrok(messages, 0.4, 700);
-    if (!result) result = await this.callGroqFallback(messages, 0.4, 700);
+    if (!result) result = await this.callGemini(messages, 0.4, 700);
     if (!result) result = await this.callGemma(messages, 0.4, 700);
+    if (!result) result = await this.callGroqFallback(messages, 0.4, 700);
     if (!result) result = await this.callDigitalOcean(messages, 0.4, 700);
 
     if (result && result.content) {

@@ -1,1 +1,15 @@
 .vercel
+
+# Environment & Secrets
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+.env*.local
+*.env
+*.env.local
+!.env.example
+*.pem
+*serviceAccount*.json
+*firebase*.json

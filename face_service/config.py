@@ -8,10 +8,7 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     
     # MongoDB Atlas Connection
-    MONGODB_URI: str = os.getenv(
-        "MONGODB_URI",
-        "mongodb+srv://soumik7484_db_user:Soumik2025@cluster0.mvqix1c.mongodb.net/notarychain?retryWrites=true&w=majority&appName=Cluster0"
-    )
+    MONGODB_URI: str = os.getenv("MONGODB_URI", "")
     DATABASE_NAME: str = "notarychain"
     COLLECTION_NAME: str = "face_embeddings"
     

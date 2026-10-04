@@ -21,8 +21,11 @@ const PLAN_PRICES = {
 let razorpayClient = null;
 function getRazorpayInstance() {
   if (!razorpayClient) {
-    const keyId = env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || 'rzp_test_TjiWqgGfepDnJp';
-    const keySecret = env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_KEY_SECRET || 'jKi5VL8eBEXgy7ysQ00MV46W';
+    const keyId = env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
+    const keySecret = env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_KEY_SECRET;
+    if (!keyId || !keySecret) {
+      throw new Error('Razorpay credentials not configured in environment (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET).');
+    }
     razorpayClient = new Razorpay({
       key_id: keyId,
       key_secret: keySecret
@@ -105,7 +108,7 @@ async function findUserSafely(reqUser) {
 }
 
 exports.getConfig = (req, res) => {
-  const keyId = env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || 'rzp_test_TjiWqgGfepDnJp';
+  const keyId = env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || '';
   resU.success(res, { keyId });
 };
 
@@ -147,7 +150,7 @@ exports.createOrder = async (req, res, next) => {
 
     logger.info(`Razorpay order created: ${order.id} for user ${user.email} (${plan} - ${billingCycle})`);
 
-    const keyId = env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || 'rzp_test_TjiWqgGfepDnJp';
+    const keyId = env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || '';
 
     resU.success(res, {
       orderId: order.id,
@@ -183,7 +186,10 @@ exports.verifyPayment = async (req, res, next) => {
       throw new err.BadRequestError('Missing Razorpay verification parameters: order_id, payment_id, or signature');
     }
 
-    const keySecret = env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_KEY_SECRET || 'jKi5VL8eBEXgy7ysQ00MV46W';
+    const keySecret = env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_KEY_SECRET;
+    if (!keySecret) {
+      throw new err.BadRequestError('Payment gateway key secret is not configured.');
+    }
     
     // HMAC SHA256 signature verification
     const generatedSignature = crypto
