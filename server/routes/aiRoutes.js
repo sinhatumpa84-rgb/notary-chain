@@ -9,6 +9,12 @@ router.post('/groq-summarize', c.groqSummarize);
 router.post('/groq-chat', c.groqChat);
 router.post('/groq-explain-flag', c.groqExplainFlag);
 
+// ─── Secondary Multi-Model AI Layer (Gemma, Gemini, DigitalOcean, RAG) ──────
+router.post('/explain-verification', c.explainVerification);
+router.post('/notary-assist', c.notaryAssist);
+router.post('/compliance-rag', c.complianceRAG);
+router.post('/tool-gateway', c.invokeToolGateway);
+
 // ─── Existing AI service routes (unchanged) ────────────────────────────────
 router.post('/ocr', c.processOCR);
 router.post('/fraud-detect', c.detectFraud);

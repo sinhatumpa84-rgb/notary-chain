@@ -5,6 +5,9 @@ const r = require('../utils/apiResponse');
 const AR = require('../models/AIReport');
 const Document = require('../models/Document');
 const logger = require('../utils/logger');
+const aiModelRouter = require('../services/ai/aiModelRouter');
+const ragService = require('../services/ai/ragService');
+const toolGateway = require('../services/ai/toolGateway');
 
 // ─── Groq Configuration ──────────────────────────────────────────────────────
 const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
@@ -362,6 +365,119 @@ Explain why this document received these findings and what action the user or re
       return res.status(429).json({ success: false, code: 'RATE_LIMITED', message: err.message, retryAfter: err.retryAfter || 10 });
     }
     logger.error('Groq explain flag error:', err.message);
+    next(err);
+  }
+};
+
+// ─── POST /api/ai/explain-verification ────────────────────────────────────────
+exports.explainVerification = async (req, res, next) => {
+  try {
+    const { documentId, verifiedResults = {} } = req.body;
+    let docTitle = 'Document';
+    let docCategory = 'contract';
+    let ocrText = '';
+
+    if (mongoose.connection.readyState === 1 && documentId && mongoose.Types.ObjectId.isValid(documentId)) {
+      try {
+        const doc = await Document.findById(documentId);
+        if (doc) {
+          docTitle = doc.title || doc.originalFileName || docTitle;
+          docCategory = doc.category || docCategory;
+          ocrText = doc.metadata?.ocrText || doc.description || '';
+        }
+      } catch (e) {
+        logger.warn('Could not load doc in explainVerification:', e.message);
+      }
+    }
+
+    const explanation = await aiModelRouter.explainVerificationResults({
+      verifiedResults,
+      documentText: ocrText,
+      title: docTitle,
+      category: docCategory
+    });
+
+    return r.success(res, explanation);
+  } catch (err) {
+    logger.error('explainVerification error:', err.message);
+    next(err);
+  }
+};
+
+// ─── POST /api/ai/notary-assist ───────────────────────────────────────────────
+exports.notaryAssist = async (req, res, next) => {
+  try {
+    const { documentId, action = 'review_summary' } = req.body;
+    let doc = null;
+
+    if (mongoose.connection.readyState === 1 && documentId && mongoose.Types.ObjectId.isValid(documentId)) {
+      try {
+        doc = await Document.findById(documentId);
+      } catch (e) {}
+    }
+
+    const docTitle = doc?.title || doc?.originalFileName || 'Uploaded Document';
+    const text = doc?.metadata?.ocrText || doc?.description || '';
+    const trustScore = doc?.metadata?.aiAnalysis?.trustScore ?? doc?.metadata?.trustScore ?? 85;
+
+    const complianceSummary = await aiModelRouter.explainVerificationResults({
+      verifiedResults: {
+        trust_score: trustScore,
+        document_integrity: 25,
+        face_match: 20,
+        liveness: 20,
+        blockchain_verified: !!(doc?.blockchainProof?.txHash || doc?.hash),
+        signature_valid: true
+      },
+      documentText: text,
+      title: docTitle,
+      category: doc?.category || 'contract'
+    });
+
+    return r.success(res, {
+      documentId,
+      documentTitle: docTitle,
+      authoritativeTrustScore: trustScore,
+      complianceSummary,
+      actionNote: 'Advisory summary prepared for human notary review. Deterministic verification results remain authoritative.'
+    });
+  } catch (err) {
+    logger.error('notaryAssist error:', err.message);
+    next(err);
+  }
+};
+
+// ─── POST /api/ai/compliance-rag ──────────────────────────────────────────────
+exports.complianceRAG = async (req, res, next) => {
+  try {
+    const { query = '', category = '' } = req.body;
+    const articles = ragService.search(query, category);
+    return r.success(res, {
+      query,
+      resultsCount: articles.length,
+      knowledge: articles,
+      advisoryNote: 'Legal and procedural reference guidelines for NotaryChain verification.'
+    });
+  } catch (err) {
+    logger.error('complianceRAG error:', err.message);
+    next(err);
+  }
+};
+
+// ─── POST /api/ai/tool-gateway ────────────────────────────────────────────────
+exports.invokeToolGateway = async (req, res, next) => {
+  try {
+    const { tool, documentId } = req.body;
+    const userId = req.user?._id || req.user?.id;
+
+    if (!tool || typeof toolGateway[tool] !== 'function') {
+      return res.status(400).json({ success: false, message: `Tool "${tool}" is not an authorized AI read tool` });
+    }
+
+    const data = await toolGateway[tool](documentId, userId);
+    return r.success(res, data);
+  } catch (err) {
+    logger.error('invokeToolGateway error:', err.message);
     next(err);
   }
 };

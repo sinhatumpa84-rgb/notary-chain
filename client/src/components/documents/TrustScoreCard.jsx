@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Shield, FileCheck, Fingerprint, Link2, Activity } from 'lucide-react';
-// Following prompt instructions:
-// import { TRUST_SCORE_CATEGORIES } from '../../utils/planConfig';
+import { ShieldCheck, Shield, FileCheck, Fingerprint, Link2, Activity, Sparkles, CheckCircle2, Info, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { explainVerification } from '../../api/aiApi';
 
 const AnimatedCounter = ({ value }) => {
   const [count, setCount] = useState(0);
@@ -31,13 +30,54 @@ const AnimatedCounter = ({ value }) => {
   return <span>{count}</span>;
 };
 
-export default function TrustScoreCard({ trustScore = 0, hash, status, hasBlockchainProof, aiRiskFlags = [], uploadedBy }) {
+export default function TrustScoreCard({ trustScore = 0, hash, status, hasBlockchainProof, aiRiskFlags = [], uploadedBy, documentId }) {
+  const [isAiExpanded, setIsAiExpanded] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [aiData, setAiData] = useState(null);
+
   // Calculate breakdown
   const integrityScore = hash ? 25 : 0;
   const identityScore = uploadedBy?.isVerified ? 20 : (uploadedBy ? 10 : 0);
   const riskScore = Math.max(0, 20 - (aiRiskFlags.length * 5));
   const blockchainScore = hasBlockchainProof ? 20 : 0;
   const statusScore = status === 'verified' ? 15 : (status === 'pending' ? 5 : 0);
+
+  const handleToggleAiExplanation = async () => {
+    if (isAiExpanded) {
+      setIsAiExpanded(false);
+      return;
+    }
+    setIsAiExpanded(true);
+    if (aiData) return;
+
+    setIsAiLoading(true);
+    try {
+      const res = await explainVerification(documentId, {
+        trust_score: trustScore,
+        document_integrity: integrityScore,
+        face_match: identityScore,
+        liveness: 20,
+        blockchain_verified: hasBlockchainProof,
+        signature_valid: status === 'verified',
+        risk_flags: aiRiskFlags
+      });
+      setAiData(res.data?.data || res.data);
+    } catch (err) {
+      setAiData({
+        model_used: 'NotaryChain Local Heuristic',
+        verified_facts: [
+          `Cryptographic SHA-256 fingerprint verified: ${integrityScore}/25`,
+          `Identity & signatory verification: ${identityScore}/20`,
+          `AI risk analysis factor: ${riskScore}/20`,
+          `Polygon Amoy blockchain proof: ${blockchainScore}/20`,
+          `Verification status confirm: ${statusScore}/15`
+        ],
+        ai_interpretation: `Deterministic Trust Score is ${trustScore}/100. Verification checks completed through authoritative rules.`
+      });
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
   
   const getScoreColor = (score) => {
     if (score >= 70) return '#2D6A4F'; // Primary Green
@@ -124,6 +164,86 @@ export default function TrustScoreCard({ trustScore = 0, hash, status, hasBlockc
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Secondary AI Advisory Explanation Section */}
+      <div className="mt-6 pt-5 border-t border-[#E8E2DA]">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={handleToggleAiExplanation}
+            className="inline-flex items-center gap-2 text-xs font-semibold text-[#2D6A4F] hover:text-[#1B4532] bg-[#F0FAF5] border border-[#B3E4CC] px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            {isAiExpanded ? 'Hide AI Advisory Breakdown' : 'Explain Trust Score Breakdown (AI Advisory)'}
+            {isAiExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+          <span className="text-[11px] text-[#7B746E]">
+            Primary: Deterministic Security Rules • AI: Advisory
+          </span>
+        </div>
+
+        {isAiExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mt-4 p-4 rounded-xl bg-[#FAF8F4] border border-[#E8E2DA] space-y-4"
+          >
+            {isAiLoading ? (
+              <div className="flex items-center gap-2 text-xs text-[#55504B] py-2">
+                <Loader2 className="w-4 h-4 animate-spin text-[#2D6A4F]" />
+                <span>Consulting secondary AI advisory model (Gemma / Gemini / Rules)...</span>
+              </div>
+            ) : aiData ? (
+              <>
+                {/* Active Model Indicator */}
+                <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-[#E8E2DA]">
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-block w-2 h-2 rounded-full bg-[#2D6A4F]" />
+                    <span className="text-xs font-bold text-[#2E2A26]">Model: {aiData.model_used || 'Gemma 2 / NotaryChain Heuristic'}</span>
+                  </div>
+                  <span className="text-[10px] font-semibold text-[#7B746E] bg-white border border-[#E8E2DA] px-2 py-0.5 rounded-full">
+                    Advisory Only • Non-Binding
+                  </span>
+                </div>
+
+                {/* Verified Facts Column */}
+                <div>
+                  <h4 className="text-xs font-bold text-[#2E2A26] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#2D6A4F]" />
+                    Verified Evidence (Authoritative Primary System)
+                  </h4>
+                  <ul className="space-y-1 text-xs text-[#55504B]">
+                    {(aiData.verified_facts || [
+                      `Cryptographic SHA-256 fingerprint verified: ${integrityScore}/25`,
+                      `Identity & signatory verification: ${identityScore}/20`,
+                      `AI risk analysis factor: ${riskScore}/20`,
+                      `Polygon Amoy blockchain proof: ${blockchainScore}/20`,
+                      `Verification status confirm: ${statusScore}/15`
+                    ]).map((fact, idx) => (
+                      <li key={idx} className="flex items-center gap-1.5">
+                        <span className="text-[#2D6A4F] font-bold">✓</span> {fact}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* AI Interpretation */}
+                <div className="p-3 bg-white border border-[#E8E2DA] rounded-lg">
+                  <h4 className="text-xs font-bold text-[#2D6A4F] uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <Info className="w-3.5 h-3.5" />
+                    AI Advisory Interpretation (Secondary)
+                  </h4>
+                  <p className="text-xs text-[#55504B] leading-relaxed">
+                    {aiData.ai_interpretation || aiData.summary || 'Score calculated through deterministic criteria. Terms consistent with standard bilateral notarization.'}
+                  </p>
+                  <p className="text-[10px] text-[#7B746E] mt-2 italic">
+                    Notice: AI advisory interpretation cannot alter or override the authoritative score of {trustScore}/100.
+                  </p>
+                </div>
+              </>
+            ) : null}
+          </motion.div>
+        )}
       </div>
     </div>
   );

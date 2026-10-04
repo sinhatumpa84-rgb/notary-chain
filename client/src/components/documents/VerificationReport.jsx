@@ -58,6 +58,7 @@ export default function VerificationReport({ document, aiAnalysis, blockchainPro
             hasBlockchainProof={!!blockchainProof}
             aiRiskFlags={aiAnalysis?.riskFlags}
             uploadedBy={document.uploadedBy}
+            documentId={document._id}
           />
         </div>
         <div>
